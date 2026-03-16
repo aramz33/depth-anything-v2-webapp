@@ -1,5 +1,5 @@
-"use client"
-import { METRICS, METRICS_NOTE } from "@/lib/metrics"
+"use client";
+import { METRICS, METRICS_NOTE } from "@/lib/metrics";
 import {
   BarChart,
   Bar,
@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
+} from "recharts";
 
 export function ResultsSection() {
   const chartData = METRICS.map((m) => ({
@@ -17,30 +17,28 @@ export function ResultsSection() {
     "δ1 (↑)": m.delta1,
     "δ2 (↑)": m.delta2,
     "δ3 (↑)": m.delta3,
-  }))
+  }));
 
   return (
     <section id="results" className="scroll-mt-20 space-y-6">
       <h2 className="text-2xl font-bold">6. Experiments &amp; Results</h2>
       <p className="text-muted-foreground">
-        The student model is evaluated on two standard benchmarks: NYU-Depth V2 (indoor)
-        and KITTI (outdoor driving). Evaluation uses the standard relative depth metrics.
-        No benchmark data is seen during training.
+        The student model is evaluated on two standard benchmarks: NYU-Depth V2
+        (indoor) and KITTI (outdoor driving). Evaluation uses the standard
+        relative depth metrics. No benchmark data is seen during training.
       </p>
 
       <figure>
-        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
-          Evaluation framework diagram — export{" "}
-          <code className="rounded bg-muted px-1 text-xs">
-            diagrams/4-evaluation-framework.drawio
-          </code>{" "}
-          to{" "}
-          <code className="rounded bg-muted px-1 text-xs">/public/evaluation.svg</code>{" "}
-          and replace this placeholder.
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/4-evaluation-framework.drawio.svg"
+          alt="Evaluation framework"
+          className="w-full rounded-lg border border-border"
+        />
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">
-          Figure 4: Evaluation framework. The trained student is applied to benchmark test
-          sets and scored on AbsRel, RMSE, and threshold accuracy metrics.
+          Figure 4: Evaluation framework. The trained student is applied to
+          benchmark test sets and scored on AbsRel, RMSE, and threshold accuracy
+          metrics.
         </figcaption>
       </figure>
 
@@ -56,19 +54,27 @@ export function ResultsSection() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  {["Dataset", "Model", "AbsRel ↓", "RMSE ↓", "δ1 ↑", "δ2 ↑", "δ3 ↑"].map(
-                    (h) => (
-                      <th key={h} className="px-4 py-3 text-left font-medium">
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Dataset",
+                    "Model",
+                    "AbsRel ↓",
+                    "RMSE ↓",
+                    "δ1 ↑",
+                    "δ2 ↑",
+                    "δ3 ↑",
+                  ].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left font-medium">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {METRICS.map((m, i) => (
                   <tr key={i} className="border-t border-border">
-                    <td className="px-4 py-3 text-muted-foreground">{m.dataset}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {m.dataset}
+                    </td>
                     <td className="px-4 py-3 font-medium">{m.model}</td>
                     <td className="px-4 py-3">{m.absRel.toFixed(3)}</td>
                     <td className="px-4 py-3">{m.rmse.toFixed(3)}</td>
@@ -82,7 +88,9 @@ export function ResultsSection() {
           </div>
 
           <div className="rounded-lg border border-border p-4">
-            <p className="mb-4 text-sm font-medium">Threshold accuracy (δ1, δ2, δ3)</p>
+            <p className="mb-4 text-sm font-medium">
+              Threshold accuracy (δ1, δ2, δ3)
+            </p>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -99,5 +107,5 @@ export function ResultsSection() {
         </>
       )}
     </section>
-  )
+  );
 }

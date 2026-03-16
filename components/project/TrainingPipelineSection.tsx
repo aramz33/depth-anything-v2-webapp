@@ -23,34 +23,29 @@ const PHASES = [
     inputs: ["Real Images + Pseudo-labels"],
     output: "Trained Student Model (Deployed)",
   },
-]
+];
 
 export function TrainingPipelineSection() {
   return (
     <section id="training" className="scroll-mt-20 space-y-5">
       <h2 className="text-2xl font-bold">4. Training Pipeline</h2>
       <p className="text-muted-foreground">
-        Training follows a strict three-phase curriculum. Each phase builds on the previous,
-        progressively transferring knowledge from high-quality synthetic supervision to
-        real-world generalisation.
+        Training follows a strict three-phase curriculum. Each phase builds on
+        the previous, progressively transferring knowledge from high-quality
+        synthetic supervision to real-world generalisation.
       </p>
 
       <figure>
-        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
-          Training pipeline diagram — export{" "}
-          <code className="rounded bg-muted px-1 text-xs">
-            diagrams/2-training-pipeline.drawio
-          </code>{" "}
-          to{" "}
-          <code className="rounded bg-muted px-1 text-xs">
-            /public/training-pipeline.svg
-          </code>{" "}
-          and replace this placeholder.
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/2-training-pipeline.drawio.svg"
+          alt="Three-phase training pipeline"
+          className="w-full rounded-lg border border-border"
+        />
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">
-          Figure 2: Three-phase training pipeline. Phase 1 establishes teacher quality on
-          synthetic data; Phase 2 generates pseudo-labels on real images; Phase 3 distils
-          into the compact student.
+          Figure 2: Three-phase training pipeline. Phase 1 establishes teacher
+          quality on synthetic data; Phase 2 generates pseudo-labels on real
+          images; Phase 3 distils into the compact student.
         </figcaption>
       </figure>
 
@@ -63,7 +58,9 @@ export function TrainingPipelineSection() {
               </span>
               <p className="font-semibold">{p.title}</p>
             </div>
-            <p className="mb-3 text-sm text-muted-foreground">{p.description}</p>
+            <p className="mb-3 text-sm text-muted-foreground">
+              {p.description}
+            </p>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
               <span>
                 <strong className="text-foreground">Inputs:</strong>{" "}
@@ -77,5 +74,5 @@ export function TrainingPipelineSection() {
         ))}
       </div>
     </section>
-  )
+  );
 }

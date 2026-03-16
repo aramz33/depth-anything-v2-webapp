@@ -21,7 +21,8 @@ const DATASETS = [
     role: "Pseudo-label generation & student training",
     images: "∼11M",
     labels: "Teacher pseudo-labels",
-    notes: "Diverse real-world imagery from SAM dataset; covers broad visual domains.",
+    notes:
+      "Diverse real-world imagery from SAM dataset; covers broad visual domains.",
   },
   {
     name: "NYU-Depth V2",
@@ -39,31 +40,30 @@ const DATASETS = [
     labels: "LiDAR GT (sparse)",
     notes: "Standard outdoor driving benchmark; sparse LiDAR ground truth.",
   },
-]
+];
 
 export function DatasetSection() {
   return (
     <section id="datasets" className="scroll-mt-20 space-y-5">
       <h2 className="text-2xl font-bold">5. Datasets</h2>
       <p className="text-muted-foreground">
-        The pipeline consumes three categories of data: labeled synthetic data for teacher
-        supervision, large-scale unlabeled real data for pseudo-label generation, and held-out
-        real benchmarks for evaluation only (never seen during training).
+        The pipeline consumes three categories of data: labeled synthetic data
+        for teacher supervision, large-scale unlabeled real data for
+        pseudo-label generation, and held-out real benchmarks for evaluation
+        only (never seen during training).
       </p>
 
       <figure>
-        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
-          Data pipeline diagram — export{" "}
-          <code className="rounded bg-muted px-1 text-xs">
-            diagrams/3-data-pipeline.drawio
-          </code>{" "}
-          to{" "}
-          <code className="rounded bg-muted px-1 text-xs">/public/data-pipeline.svg</code>{" "}
-          and replace this placeholder.
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/3-data-pipeline.drawio.svg"
+          alt="Dataset and data pipeline"
+          className="w-full rounded-lg border border-border"
+        />
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">
-          Figure 3: Data pipeline. Synthetic datasets feed the teacher; real unlabeled data
-          receives pseudo-labels from the frozen teacher; benchmarks are reserved for evaluation.
+          Figure 3: Data pipeline. Synthetic datasets feed the teacher; real
+          unlabeled data receives pseudo-labels from the frozen teacher;
+          benchmarks are reserved for evaluation.
         </figcaption>
       </figure>
 
@@ -71,11 +71,13 @@ export function DatasetSection() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              {["Dataset", "Type", "Role", "Images", "Labels", "Notes"].map((h) => (
-                <th key={h} className="px-4 py-3 text-left font-medium">
-                  {h}
-                </th>
-              ))}
+              {["Dataset", "Type", "Role", "Images", "Labels", "Notes"].map(
+                (h) => (
+                  <th key={h} className="px-4 py-3 text-left font-medium">
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
@@ -86,12 +88,14 @@ export function DatasetSection() {
                 <td className="px-4 py-3 text-muted-foreground">{d.role}</td>
                 <td className="px-4 py-3 text-muted-foreground">{d.images}</td>
                 <td className="px-4 py-3 text-muted-foreground">{d.labels}</td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">{d.notes}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {d.notes}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
     </section>
-  )
+  );
 }
