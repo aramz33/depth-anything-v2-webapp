@@ -5,7 +5,16 @@ const HF_SPACE_BASE =
   "https://aramsis-depth-anything-v2-pfe-tsp.hf.space";
 
 export async function POST(req: NextRequest) {
-  const { imageBase64 } = await req.json();
+  let imageBase64: string;
+  try {
+    const body = await req.json();
+    imageBase64 = body?.imageBase64;
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to parse request body – image may be too large" },
+      { status: 400 },
+    );
+  }
 
   if (!imageBase64 || typeof imageBase64 !== "string") {
     return NextResponse.json(
@@ -42,7 +51,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const uploadedPaths: string[] = await uploadRes.json();
+  let uploadedPaths: string[];
+  try {
+    uploadedPaths = await uploadRes.json();
+  } catch {
+    const raw = await uploadRes.text().catch(() => "");
+    return NextResponse.json(
+      {
+        error: "HF Spaces upload response was not JSON",
+        detail: raw.slice(0, 500),
+      },
+      { status: 502 },
+    );
+  }
   const filePath = uploadedPaths[0];
 
   // Step 2: Submit the job to the Gradio 5 queue
@@ -67,7 +88,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { event_id } = await submitRes.json();
+  let event_id: string;
+  try {
+    const submitBody = await submitRes.json();
+    event_id = submitBody?.event_id;
+  } catch {
+    const raw = await submitRes.text().catch(() => "");
+    return NextResponse.json(
+      {
+        error: "HF Spaces submit response was not JSON",
+        detail: raw.slice(0, 500),
+      },
+      { status: 502 },
+    );
+  }
 
   if (!event_id) {
     return NextResponse.json(

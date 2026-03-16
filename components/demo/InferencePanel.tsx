@@ -5,6 +5,7 @@ import { ImageUpload } from "./ImageUpload";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
 import { Badge } from "@/components/ui/badge";
 import { type Sample } from "@/lib/samples";
+import { resizeImage } from "@/lib/resize-image";
 
 interface Result {
   original: string;
@@ -62,7 +63,8 @@ export function InferencePanel() {
     setLoading(true);
     setError(null);
     try {
-      const r = await runPrediction(base64);
+      const resized = await resizeImage(base64);
+      const r = await runPrediction(resized);
       setResult(r);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
