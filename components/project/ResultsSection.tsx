@@ -21,12 +21,34 @@ export function ResultsSection() {
 
   return (
     <section id="results" className="scroll-mt-20 space-y-6">
-      <h2 className="text-2xl font-bold">Results</h2>
-      <p className="text-sm text-muted-foreground">{METRICS_NOTE}</p>
+      <h2 className="text-2xl font-bold">6. Experiments &amp; Results</h2>
+      <p className="text-muted-foreground">
+        The student model is evaluated on two standard benchmarks: NYU-Depth V2 (indoor)
+        and KITTI (outdoor driving). Evaluation uses the standard relative depth metrics.
+        No benchmark data is seen during training.
+      </p>
+
+      <figure>
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
+          Evaluation framework diagram — export{" "}
+          <code className="rounded bg-muted px-1 text-xs">
+            diagrams/4-evaluation-framework.drawio
+          </code>{" "}
+          to{" "}
+          <code className="rounded bg-muted px-1 text-xs">/public/evaluation.svg</code>{" "}
+          and replace this placeholder.
+        </div>
+        <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+          Figure 4: Evaluation framework. The trained student is applied to benchmark test
+          sets and scored on AbsRel, RMSE, and threshold accuracy metrics.
+        </figcaption>
+      </figure>
+
+      <p className="text-xs text-muted-foreground">{METRICS_NOTE}</p>
 
       {METRICS.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Benchmark results coming soon.
+          Benchmark results pending training completion.
         </p>
       ) : (
         <>
@@ -34,11 +56,13 @@ export function ResultsSection() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  {["Dataset", "Model", "AbsRel ↓", "RMSE ↓", "δ1 ↑", "δ2 ↑", "δ3 ↑"].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left font-medium">
-                      {h}
-                    </th>
-                  ))}
+                  {["Dataset", "Model", "AbsRel ↓", "RMSE ↓", "δ1 ↑", "δ2 ↑", "δ3 ↑"].map(
+                    (h) => (
+                      <th key={h} className="px-4 py-3 text-left font-medium">
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody>

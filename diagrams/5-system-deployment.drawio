@@ -1,0 +1,152 @@
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="System Deployment" id="deploy">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="End-to-End System Deployment Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="15" width="770" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- ===== CLIENT LAYER ===== -->
+        <mxCell id="client_layer" value="Client" style="swimlane;fillColor=#f8fafc;strokeColor=#94a3b8;fontStyle=1;fontSize=11;fontColor=#475569;startSize=28;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="220" height="700" as="geometry" />
+        </mxCell>
+
+        <mxCell id="browser" value="Web Browser" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#94a3b8;fontSize=10;fontStyle=1;" vertex="1" parent="client_layer">
+          <mxGeometry x="20" y="40" width="180" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="upload_ui" value="Image Upload / Sample Select" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#94a3b8;fontSize=10;" vertex="1" parent="client_layer">
+          <mxGeometry x="20" y="115" width="180" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="slider_ui" value="Before/After Slider" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#94a3b8;fontSize=10;" vertex="1" parent="client_layer">
+          <mxGeometry x="20" y="185" width="180" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="depth_ui" value="Grayscale + Colorized&lt;br/&gt;Depth Map Display" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#94a3b8;fontSize=10;" vertex="1" parent="client_layer">
+          <mxGeometry x="20" y="250" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ===== NEXTJS LAYER ===== -->
+        <mxCell id="nextjs_layer" value="Next.js Application (Vercel)" style="swimlane;fillColor=#f0fdf4;strokeColor=#22c55e;fontStyle=1;fontSize=11;fontColor=#15803d;startSize=28;" vertex="1" parent="1">
+          <mxGeometry x="290" y="60" width="250" height="700" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pages" value="Pages&lt;br/&gt;/ · /demo · /project · /about" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="nextjs_layer">
+          <mxGeometry x="20" y="45" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="inference_panel" value="InferencePanel Component&lt;br/&gt;(image → base64 → POST)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="nextjs_layer">
+          <mxGeometry x="20" y="120" width="210" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api_route" value="API Route&lt;br/&gt;POST /api/predict" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#15803d;strokeColor=#166534;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="nextjs_layer">
+          <mxGeometry x="20" y="210" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="step1" value="① POST /gradio_api/upload&lt;br/&gt;(multipart/form-data)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontSize=9;" vertex="1" parent="nextjs_layer">
+          <mxGeometry x="20" y="295" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="step2" value="② POST /gradio_api/call/predict&lt;br/&gt;(JSON: {path, meta})" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontSize=9;" vertex="1" parent="nextjs_layer">
+          <mxGeometry x="20" y="365" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="step3" value="③ GET /gradio_api/call/predict/{id}&lt;br/&gt;(SSE stream → parse complete)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontSize=9;" vertex="1" parent="nextjs_layer">
+          <mxGeometry x="20" y="435" width="210" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="response" value="JSON Response&lt;br/&gt;{grayscale, colorized, inferenceMs}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbf7d0;strokeColor=#22c55e;fontSize=9;fontStyle=1;" vertex="1" parent="nextjs_layer">
+          <mxGeometry x="20" y="525" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ===== HUGGINGFACE LAYER ===== -->
+        <mxCell id="hf_layer" value="HuggingFace Spaces" style="swimlane;fillColor=#fff7ed;strokeColor=#f97316;fontStyle=1;fontSize=11;fontColor=#c2410c;startSize=28;" vertex="1" parent="1">
+          <mxGeometry x="570" y="60" width="250" height="700" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gradio" value="Gradio 5 Application&lt;br/&gt;(Python, CPU tier)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#f97316;fontSize=10;fontStyle=1;" vertex="1" parent="hf_layer">
+          <mxGeometry x="20" y="45" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hf_upload" value="File Upload Handler&lt;br/&gt;/gradio_api/upload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#f97316;fontSize=9;" vertex="1" parent="hf_layer">
+          <mxGeometry x="20" y="130" width="210" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hf_queue" value="Job Queue&lt;br/&gt;/gradio_api/call/predict" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#f97316;fontSize=9;" vertex="1" parent="hf_layer">
+          <mxGeometry x="20" y="205" width="210" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hf_model" value="&lt;b&gt;ViT-Small + DPT Model&lt;/b&gt;&lt;br/&gt;25M params · PyTorch&lt;br/&gt;Monocular Depth Inference" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f97316;strokeColor=#c2410c;fontColor=#ffffff;fontSize=10;" vertex="1" parent="hf_layer">
+          <mxGeometry x="20" y="285" width="210" height="75" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hf_sse" value="SSE Stream Output&lt;br/&gt;event: complete&lt;br/&gt;data: [grayscale_url, colorized_url]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffedd5;strokeColor=#f97316;fontSize=9;" vertex="1" parent="hf_layer">
+          <mxGeometry x="20" y="395" width="210" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ===== INTERNAL ARROWS (client) ===== -->
+        <mxCell id="ca1" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="browser" target="upload_ui" parent="client_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ca2" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="slider_ui" target="depth_ui" parent="client_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== INTERNAL ARROWS (nextjs) ===== -->
+        <mxCell id="na1" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="inference_panel" target="api_route" parent="nextjs_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="na2" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="api_route" target="step1" parent="nextjs_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="na3" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="step1" target="step2" parent="nextjs_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="na4" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="step2" target="step3" parent="nextjs_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="na5" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="step3" target="response" parent="nextjs_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== INTERNAL ARROWS (hf) ===== -->
+        <mxCell id="ha1" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="hf_upload" target="hf_queue" parent="hf_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ha2" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="hf_queue" target="hf_model" parent="hf_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ha3" value="" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="hf_model" target="hf_sse" parent="hf_layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== CROSS-LAYER ARROWS ===== -->
+        <mxCell id="x1" value="POST (base64 image)" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#15803d;fontColor=#15803d;fontSize=9;fontStyle=2;" edge="1" source="upload_ui" target="inference_panel" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="x2" value="multipart upload" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#f97316;fontColor=#f97316;fontSize=9;fontStyle=2;" edge="1" source="step1" target="hf_upload" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="x3" value="job submit" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#f97316;fontColor=#f97316;fontSize=9;fontStyle=2;" edge="1" source="step2" target="hf_queue" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="x4" value="SSE stream" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#f97316;fontColor=#f97316;fontSize=9;fontStyle=2;" edge="1" source="hf_sse" target="step3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="x5" value="depth maps + timing" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#15803d;fontColor=#15803d;fontSize=9;fontStyle=2;" edge="1" source="response" target="slider_ui" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

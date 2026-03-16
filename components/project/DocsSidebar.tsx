@@ -3,18 +3,24 @@ import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 const SECTIONS = [
-  { id: "overview", label: "Overview" },
-  { id: "architecture", label: "Architecture" },
+  { id: "abstract", label: "Abstract" },
+  { id: "problem", label: "1. Research Problem" },
+  { id: "related-work", label: "2. Related Work" },
+  { id: "methodology", label: "3. Proposed Approach" },
   { id: "teacher", label: "↳ Teacher Model", indent: true },
-  { id: "distillation", label: "↳ Distillation", indent: true },
+  { id: "distillation", label: "↳ Pseudo-labels", indent: true },
   { id: "student", label: "↳ Student Model", indent: true },
-  { id: "results", label: "Results" },
-  { id: "limitations", label: "Limitations" },
+  { id: "losses", label: "↳ Loss Functions", indent: true },
+  { id: "training", label: "4. Training Pipeline" },
+  { id: "datasets", label: "5. Datasets" },
+  { id: "results", label: "6. Results" },
+  { id: "limitations", label: "7. Limitations & Future Work" },
+  { id: "conclusion", label: "8. Conclusion" },
   { id: "references", label: "References" },
 ]
 
 export function DocsSidebar() {
-  const [active, setActive] = useState("overview")
+  const [active, setActive] = useState("abstract")
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -23,7 +29,7 @@ export function DocsSidebar() {
           if (e.isIntersecting) setActive(e.target.id)
         })
       },
-      { rootMargin: "0px 0px -60% 0px" }
+      { rootMargin: "0px 0px -60% 0px" },
     )
     SECTIONS.forEach((s) => {
       const el = document.getElementById(s.id)
@@ -47,7 +53,7 @@ export function DocsSidebar() {
                 s.indent && "pl-4",
                 active === s.id
                   ? "bg-muted font-medium text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {s.label}
