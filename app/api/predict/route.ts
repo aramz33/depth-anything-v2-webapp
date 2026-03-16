@@ -76,11 +76,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Step 3: Stream the SSE result
+  // Step 3: Stream the SSE result with timeout
   const start = Date.now();
-  const streamRes = await fetch(
-    `${HF_SPACE_BASE}/gradio_api/call/predict/${event_id}`,
-  );
+  const STREAM_TIMEOUT = 120000; // 120 seconds max for inference
+
+  let streamRes: Response;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT);
+
+    streamRes = await fetch(
+      `${HF_SPACE_BASE}/gradio_api/call/predict/${event_id}`,
+      { signal: controller.signal },
+    );
+
+    clearTimeout(timeoutId);
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return NextResponse.json(
+        { error: "Inference timeout (120s exceeded)" },
+        { status: 504 },
+      );
+    }
+    return NextResponse.json(
+      { error: `Stream fetch failed: ${String(error)}` },
+      { status: 502 },
+    );
+  }
 
   if (!streamRes.ok || !streamRes.body) {
     return NextResponse.json(
@@ -90,7 +112,16 @@ export async function POST(req: NextRequest) {
   }
 
   // Read SSE lines and find the "complete" event data
-  const text = await streamRes.text();
+  let text: string;
+  try {
+    text = await streamRes.text();
+  } catch (error) {
+    return NextResponse.json(
+      { error: `Failed to read response: ${String(error)}` },
+      { status: 502 },
+    );
+  }
+
   const lines = text.split("\n");
 
   let outputData: unknown[] | null = null;
