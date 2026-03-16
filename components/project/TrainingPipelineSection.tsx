@@ -3,36 +3,38 @@ const PHASES = [
     number: "Phase 1",
     title: "Teacher Training on Synthetic Data",
     description:
-      "The teacher model (DINOv2-Giant + DPT) is trained on synthetic datasets with dense ground-truth depth maps. Scale-and-shift invariant loss and gradient matching loss are jointly minimized. The teacher backbone is kept frozen; only the DPT decoder is trained. After convergence, the teacher produces highly accurate relative depth predictions on in-distribution synthetic scenes.",
-    inputs: ["Hypersim", "Virtual KITTI 2"],
+      "The teacher model (DINOv2-Giant + DPT decoder) is trained on synthetic datasets with dense ground-truth depth maps using the composite ℒ_ssi + ℒ_gm objective. The DINOv2 backbone is kept frozen throughout; only the DPT decoder weights are optimised. After convergence, the teacher produces highly accurate relative depth maps on in-distribution synthetic scenes.",
+    inputs: ["Hypersim (77k images)", "Virtual KITTI 2 (21k images)"],
     output: "Trained Teacher Model",
   },
   {
     number: "Phase 2",
     title: "Pseudo-label Generation on Real Images",
     description:
-      "The frozen teacher is applied to unlabeled real-world images from the SA-1B dataset (∼11M images). For each image, the teacher infers a high-quality depth map that serves as a pseudo ground-truth label. This step bridges the domain gap: the pseudo-labels carry the teacher's depth understanding into the real-image distribution without any manual annotation.",
-    inputs: ["SA-1B (∼11M unlabeled real images)"],
+      "The frozen teacher is run in inference mode over the SA-1B dataset (~11M real unlabeled images). For each image the teacher produces a depth map that becomes the pseudo ground-truth label. No gradient is computed; this phase is purely a forward pass over the dataset. The resulting pseudo-label corpus bridges the synthetic-to-real gap by grounding the student training in real-image statistics.",
+    inputs: ["SA-1B (~11M unlabeled real images)"],
     output: "Pseudo-label Database",
   },
   {
     number: "Phase 3",
     title: "Student Distillation on Real Images",
     description:
-      "The student (ViT-Small + DPT) trains on real images paired with their teacher-generated pseudo-labels. The same composite loss (L_ssi + L_gm) is applied between the student's predictions and the pseudo-labels. The student learns a compressed representation that generalizes across domains at 44× fewer parameters than the teacher.",
-    inputs: ["Real Images + Pseudo-labels"],
-    output: "Trained Student Model (Deployed)",
+      "The student (ViT-Small + DPT) is trained on real images paired with their teacher pseudo-labels. The same composite loss (ℒ_ssi + ℒ_gm) is computed between the student's prediction and the pseudo-label. Backpropagation updates only the student's weights. The student acquires real-world depth generalisation at 44× fewer parameters than the teacher.",
+    inputs: ["Real Images + Teacher Pseudo-labels (from Phase 2)"],
+    output: "Trained Student Model (deployed to HuggingFace Spaces)",
   },
-];
+]
 
 export function TrainingPipelineSection() {
   return (
     <section id="training" className="scroll-mt-20 space-y-5">
       <h2 className="text-2xl font-bold">4. Training Pipeline</h2>
       <p className="text-muted-foreground">
-        Training follows a strict three-phase curriculum. Each phase builds on
-        the previous, progressively transferring knowledge from high-quality
-        synthetic supervision to real-world generalisation.
+        Training follows a strict three-phase curriculum. Each phase builds on the
+        previous, progressively transferring knowledge from high-quality synthetic
+        supervision to real-world generalisation. Phases are strictly sequential —
+        Phase 2 cannot begin until Phase 1 converges, and Phase 3 requires the
+        complete pseudo-label database from Phase 2.
       </p>
 
       <figure>
@@ -43,9 +45,9 @@ export function TrainingPipelineSection() {
           className="w-full rounded-lg border border-border"
         />
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">
-          Figure 2: Three-phase training pipeline. Phase 1 establishes teacher
-          quality on synthetic data; Phase 2 generates pseudo-labels on real
-          images; Phase 3 distils into the compact student.
+          Figure 2 — Three-phase training curriculum. Phase 1 establishes teacher
+          depth quality on synthetic data; Phase 2 generates pseudo-labels on real
+          images; Phase 3 distils teacher knowledge into the compact student.
         </figcaption>
       </figure>
 
@@ -58,9 +60,7 @@ export function TrainingPipelineSection() {
               </span>
               <p className="font-semibold">{p.title}</p>
             </div>
-            <p className="mb-3 text-sm text-muted-foreground">
-              {p.description}
-            </p>
+            <p className="mb-3 text-sm text-muted-foreground">{p.description}</p>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
               <span>
                 <strong className="text-foreground">Inputs:</strong>{" "}
@@ -74,5 +74,5 @@ export function TrainingPipelineSection() {
         ))}
       </div>
     </section>
-  );
+  )
 }

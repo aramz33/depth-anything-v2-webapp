@@ -4,18 +4,19 @@ import { cn } from "@/lib/utils"
 
 const SECTIONS = [
   { id: "abstract", label: "Abstract" },
-  { id: "problem", label: "1. Research Problem" },
+  { id: "problem", label: "1. Context & Motivation" },
   { id: "related-work", label: "2. Related Work" },
-  { id: "methodology", label: "3. Proposed Approach" },
+  { id: "methodology", label: "3. Architecture" },
   { id: "teacher", label: "↳ Teacher Model", indent: true },
   { id: "distillation", label: "↳ Pseudo-labels", indent: true },
   { id: "student", label: "↳ Student Model", indent: true },
   { id: "losses", label: "↳ Loss Functions", indent: true },
   { id: "training", label: "4. Training Pipeline" },
   { id: "datasets", label: "5. Datasets" },
-  { id: "results", label: "6. Results" },
-  { id: "limitations", label: "7. Limitations & Future Work" },
-  { id: "conclusion", label: "8. Conclusion" },
+  { id: "deployment", label: "6. Deployment" },
+  { id: "results", label: "7. Results" },
+  { id: "limitations", label: "8. Limitations & Analysis" },
+  { id: "conclusion", label: "9. Conclusion" },
   { id: "references", label: "References" },
 ]
 

@@ -13,7 +13,7 @@ const DATASETS = [
     role: "Teacher training",
     images: "21,260",
     labels: "Dense GT depth",
-    notes: "Outdoor driving simulation; weather and lighting variations.",
+    notes: "Outdoor driving simulation; weather, time-of-day, and camera angle variations.",
   },
   {
     name: "SA-1B",
@@ -21,8 +21,7 @@ const DATASETS = [
     role: "Pseudo-label generation & student training",
     images: "∼11M",
     labels: "Teacher pseudo-labels",
-    notes:
-      "Diverse real-world imagery from SAM dataset; covers broad visual domains.",
+    notes: "Diverse real-world imagery from SAM; broad scene and lighting diversity.",
   },
   {
     name: "NYU-Depth V2",
@@ -30,7 +29,7 @@ const DATASETS = [
     role: "Evaluation only",
     images: "654 test",
     labels: "Structured-light GT",
-    notes: "Standard indoor depth benchmark; metric ground truth from Kinect.",
+    notes: "Standard indoor benchmark; metric ground truth from Kinect. Never seen during training.",
   },
   {
     name: "KITTI",
@@ -38,19 +37,20 @@ const DATASETS = [
     role: "Evaluation only",
     images: "652 test",
     labels: "LiDAR GT (sparse)",
-    notes: "Standard outdoor driving benchmark; sparse LiDAR ground truth.",
+    notes: "Standard outdoor driving benchmark; sparse LiDAR ground truth. Never seen during training.",
   },
-];
+]
 
 export function DatasetSection() {
   return (
     <section id="datasets" className="scroll-mt-20 space-y-5">
-      <h2 className="text-2xl font-bold">5. Datasets</h2>
+      <h2 className="text-2xl font-bold">5. Datasets &amp; Data Pipeline</h2>
       <p className="text-muted-foreground">
-        The pipeline consumes three categories of data: labeled synthetic data
-        for teacher supervision, large-scale unlabeled real data for
-        pseudo-label generation, and held-out real benchmarks for evaluation
-        only (never seen during training).
+        The pipeline consumes three distinct categories of data. Labeled synthetic data
+        provides clean depth supervision for the teacher. Large-scale unlabeled real data
+        receives pseudo-labels from the frozen teacher and drives student training.
+        Held-out labeled benchmarks are reserved exclusively for final evaluation and
+        are never exposed during training.
       </p>
 
       <figure>
@@ -61,9 +61,9 @@ export function DatasetSection() {
           className="w-full rounded-lg border border-border"
         />
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">
-          Figure 3: Data pipeline. Synthetic datasets feed the teacher; real
-          unlabeled data receives pseudo-labels from the frozen teacher;
-          benchmarks are reserved for evaluation.
+          Figure 3 — Data pipeline. Synthetic datasets feed teacher training; the frozen
+          teacher generates pseudo-labels over SA-1B for student training; evaluation
+          benchmarks are strictly held out.
         </figcaption>
       </figure>
 
@@ -71,13 +71,11 @@ export function DatasetSection() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              {["Dataset", "Type", "Role", "Images", "Labels", "Notes"].map(
-                (h) => (
-                  <th key={h} className="px-4 py-3 text-left font-medium">
-                    {h}
-                  </th>
-                ),
-              )}
+              {["Dataset", "Type", "Role", "Images", "Labels", "Notes"].map((h) => (
+                <th key={h} className="px-4 py-3 text-left font-medium">
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -88,14 +86,12 @@ export function DatasetSection() {
                 <td className="px-4 py-3 text-muted-foreground">{d.role}</td>
                 <td className="px-4 py-3 text-muted-foreground">{d.images}</td>
                 <td className="px-4 py-3 text-muted-foreground">{d.labels}</td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">
-                  {d.notes}
-                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{d.notes}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
     </section>
-  );
+  )
 }

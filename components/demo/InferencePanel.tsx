@@ -30,7 +30,7 @@ async function runPrediction(
   }
   if (!res.ok)
     throw new Error(String(data?.detail ?? data?.error ?? "Prediction failed"));
-  return { original: imageBase64, ...(data as Result) };
+  return { ...(data as Omit<Result, "original">), original: imageBase64 };
 }
 
 export function InferencePanel() {
