@@ -47,73 +47,83 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Télécom SudParis brand palette */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --tsp-navy: #0d3f79;
+  --tsp-teal: #00a3b5;
+  --tsp-red: #df2f56;
+  --tsp-orange: #ff9c29;
+  --tsp-green: #9bc635;
+  --tsp-navy-dark: #092d57;
+  --tsp-navy-light: #1a5299;
+  --tsp-teal-dim: #007d8c;
+
+  --background: #0d3f79;
+  --foreground: #f0f7ff;
+  --card: #0a3368;
+  --card-foreground: #f0f7ff;
+  --popover: #0a3368;
+  --popover-foreground: #f0f7ff;
+  --primary: #00a3b5;
+  --primary-foreground: #ffffff;
+  --secondary: #1a5299;
+  --secondary-foreground: #f0f7ff;
+  --muted: #0e3d73;
+  --muted-foreground: #89b4d4;
+  --accent: #00a3b5;
+  --accent-foreground: #ffffff;
+  --destructive: #df2f56;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #00a3b5;
+  --chart-1: #00a3b5;
+  --chart-2: #9bc635;
+  --chart-3: #ff9c29;
+  --chart-4: #df2f56;
+  --chart-5: #1a5299;
+  --radius: 0.25rem;
+  --sidebar: #092d57;
+  --sidebar-foreground: #f0f7ff;
+  --sidebar-primary: #00a3b5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a5299;
+  --sidebar-accent-foreground: #f0f7ff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #00a3b5;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0d3f79;
+  --foreground: #f0f7ff;
+  --card: #0a3368;
+  --card-foreground: #f0f7ff;
+  --popover: #0a3368;
+  --popover-foreground: #f0f7ff;
+  --primary: #00a3b5;
+  --primary-foreground: #ffffff;
+  --secondary: #1a5299;
+  --secondary-foreground: #f0f7ff;
+  --muted: #0e3d73;
+  --muted-foreground: #89b4d4;
+  --accent: #00a3b5;
+  --accent-foreground: #ffffff;
+  --destructive: #df2f56;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #00a3b5;
+  --chart-1: #00a3b5;
+  --chart-2: #9bc635;
+  --chart-3: #ff9c29;
+  --chart-4: #df2f56;
+  --chart-5: #1a5299;
+  --sidebar: #092d57;
+  --sidebar-foreground: #f0f7ff;
+  --sidebar-primary: #00a3b5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a5299;
+  --sidebar-accent-foreground: #f0f7ff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #00a3b5;
 }
 
 @layer base {
@@ -122,8 +132,71 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans), "Century Gothic", sans-serif;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* TSP geometric triangle hero background */
+.tsp-hero-bg {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--tsp-navy);
+}
+
+.tsp-hero-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    /* Large triangular facets — TSP low-poly signature motif */
+    linear-gradient(135deg, #0e4a8c 0%, transparent 50%),
+    linear-gradient(225deg, #0b3870 0%, transparent 50%),
+    linear-gradient(45deg, #007d8c22 0%, transparent 60%),
+    linear-gradient(315deg, #00a3b518 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.tsp-hero-bg::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 55%;
+  height: 110%;
+  clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 30%);
+  background: linear-gradient(
+    145deg,
+    #00a3b514 0%,
+    #0d3f7922 40%,
+    #1a529930 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Navbar link hover — teal on hover without JS event handlers */
+.tsp-nav-link {
+  color: rgba(240, 247, 255, 0.7);
+  transition: color 150ms ease;
+}
+.tsp-nav-link:hover {
+  color: var(--tsp-teal);
+}
+
+/* All-caps heading utility matching TSP typography */
+.tsp-heading {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tsp-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.7rem;
+  color: var(--tsp-teal);
 }
