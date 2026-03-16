@@ -21,10 +21,15 @@ async function runPrediction(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageBase64 }),
   });
-  const data = await res.json();
+  let data: Record<string, unknown>;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Server error ${res.status} (response was not JSON)`);
+  }
   if (!res.ok)
-    throw new Error(data?.detail ?? data?.error ?? "Prediction failed");
-  return { original: imageBase64, ...data };
+    throw new Error(String(data?.detail ?? data?.error ?? "Prediction failed"));
+  return { original: imageBase64, ...(data as Result) };
 }
 
 export function InferencePanel() {
