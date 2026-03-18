@@ -72,8 +72,11 @@ export function ResultsSection() {
             </tr>
           </thead>
           <tbody>
-            {METRICS.map((m, i) => (
-              <tr key={i} className="border-t border-border">
+            {METRICS.map((m) => (
+              <tr
+                key={`${m.dataset}-${m.model}`}
+                className="border-t border-border"
+              >
                 <td className="px-4 py-3 text-muted-foreground">{m.dataset}</td>
                 <td className="px-4 py-3 font-medium">{m.model}</td>
                 <td className="px-4 py-3">{fmt(m.absRel)}</td>
