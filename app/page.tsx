@@ -8,16 +8,48 @@ export default function HeroPage() {
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-28">
         {/* Badge row */}
         <div className="mb-8 flex flex-wrap gap-2">
-          <Badge variant="secondary" className="tsp-label rounded-sm px-2 py-1" style={{ backgroundColor: "rgba(0,163,181,0.15)", color: "var(--tsp-teal)", border: "1px solid rgba(0,163,181,0.3)" }}>
+          <Badge
+            variant="secondary"
+            className="tsp-label rounded-sm px-2 py-1"
+            style={{
+              backgroundColor: "rgba(0,163,181,0.15)",
+              color: "var(--tsp-teal)",
+              border: "1px solid rgba(0,163,181,0.3)",
+            }}
+          >
             ViT-Small · 25M params
           </Badge>
-          <Badge variant="secondary" className="tsp-label rounded-sm px-2 py-1" style={{ backgroundColor: "rgba(0,163,181,0.15)", color: "var(--tsp-teal)", border: "1px solid rgba(0,163,181,0.3)" }}>
+          <Badge
+            variant="secondary"
+            className="tsp-label rounded-sm px-2 py-1"
+            style={{
+              backgroundColor: "rgba(0,163,181,0.15)",
+              color: "var(--tsp-teal)",
+              border: "1px solid rgba(0,163,181,0.3)",
+            }}
+          >
             DINOv2 Backbone
           </Badge>
-          <Badge variant="secondary" className="tsp-label rounded-sm px-2 py-1" style={{ backgroundColor: "rgba(0,163,181,0.15)", color: "var(--tsp-teal)", border: "1px solid rgba(0,163,181,0.3)" }}>
+          <Badge
+            variant="secondary"
+            className="tsp-label rounded-sm px-2 py-1"
+            style={{
+              backgroundColor: "rgba(0,163,181,0.15)",
+              color: "var(--tsp-teal)",
+              border: "1px solid rgba(0,163,181,0.3)",
+            }}
+          >
             Teacher-Student Distillation
           </Badge>
-          <Badge variant="secondary" className="tsp-label rounded-sm px-2 py-1" style={{ backgroundColor: "rgba(13,63,121,0.8)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.2)" }}>
+          <Badge
+            variant="secondary"
+            className="tsp-label rounded-sm px-2 py-1"
+            style={{
+              backgroundColor: "rgba(13,63,121,0.8)",
+              color: "#ffffff",
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
             Télécom SudParis · MAIA
           </Badge>
         </div>
@@ -33,7 +65,10 @@ export default function HeroPage() {
         </h1>
 
         {/* Sub-headline */}
-        <p className="mb-10 max-w-2xl text-lg leading-relaxed" style={{ color: "rgba(240,247,255,0.75)" }}>
+        <p
+          className="mb-10 max-w-2xl text-lg leading-relaxed"
+          style={{ color: "rgba(240,247,255,0.75)" }}
+        >
           A reproduction of Depth Anything V2 — training a lightweight ViT-Small
           student model via knowledge distillation from a DINOv2-Giant teacher,
           deployed at scale on Hugging Face Spaces.
@@ -45,7 +80,11 @@ export default function HeroPage() {
             asChild
             size="lg"
             className="rounded-sm font-bold uppercase tracking-widest"
-            style={{ backgroundColor: "var(--tsp-teal)", color: "#ffffff", letterSpacing: "0.1em" }}
+            style={{
+              backgroundColor: "var(--tsp-teal)",
+              color: "#ffffff",
+              letterSpacing: "0.1em",
+            }}
           >
             <Link href="/demo">Try the Demo →</Link>
           </Button>
@@ -54,7 +93,12 @@ export default function HeroPage() {
             size="lg"
             variant="outline"
             className="rounded-sm font-bold uppercase tracking-widest"
-            style={{ borderColor: "rgba(255,255,255,0.3)", color: "#ffffff", backgroundColor: "transparent", letterSpacing: "0.1em" }}
+            style={{
+              borderColor: "rgba(255,255,255,0.3)",
+              color: "#ffffff",
+              backgroundColor: "transparent",
+              letterSpacing: "0.1em",
+            }}
           >
             <Link href="/project">Read the Docs</Link>
           </Button>
@@ -77,9 +121,15 @@ export default function HeroPage() {
 
         {/* Divider */}
         <div className="mt-20 mb-8 flex items-center gap-4">
-          <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
+          <div
+            className="h-px flex-1"
+            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+          />
           <span className="tsp-label">Key capabilities</span>
-          <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
+          <div
+            className="h-px flex-1"
+            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+          />
         </div>
 
         {/* Feature strip */}
@@ -95,13 +145,13 @@ export default function HeroPage() {
               label: "02",
               title: "Distilled at Scale",
               desc: "Student trained on pseudo-labels from a frozen DINOv2-Giant teacher on the SA-1B real-image dataset.",
-              accent: "var(--tsp-orange)",
+              accent: "var(--tsp-teal)",
             },
             {
               label: "03",
               title: "Live HF Deployment",
               desc: "Inference runs live on Hugging Face Spaces. API-first design, accessible from anywhere.",
-              accent: "var(--tsp-green)",
+              accent: "var(--tsp-teal)",
             },
           ].map((f, i) => (
             <div
@@ -109,7 +159,8 @@ export default function HeroPage() {
               className="border-t p-8"
               style={{
                 borderColor: "rgba(255,255,255,0.1)",
-                borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.1)" : undefined,
+                borderLeft:
+                  i > 0 ? "1px solid rgba(255,255,255,0.1)" : undefined,
               }}
             >
               <div
@@ -124,7 +175,10 @@ export default function HeroPage() {
               >
                 {f.title}
               </h3>
-              <p className="text-sm leading-relaxed" style={{ color: "rgba(240,247,255,0.6)" }}>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: "rgba(240,247,255,0.6)" }}
+              >
                 {f.desc}
               </p>
             </div>
