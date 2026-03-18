@@ -1,48 +1,48 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface PaperModalProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
 export function PaperModal({ open, onClose }: PaperModalProps) {
-  const [loaded, setLoaded] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const t = useTranslations("paperModal")
+  const [loaded, setLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const t = useTranslations("paperModal");
 
   // Detect iOS/mobile — PDF iframes don't render inline on iOS Safari
   useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-  }, [])
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
 
   // Escape key
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [open, onClose])
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
 
   // Scroll lock
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : ""
+    document.body.style.overflow = open ? "hidden" : "";
     return () => {
-      document.body.style.overflow = ""
-    }
-  }, [open])
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   // Reset loaded state when closed
   useEffect(() => {
-    if (!open) setLoaded(false)
-  }, [open])
+    if (!open) setLoaded(false);
+  }, [open]);
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#092d57]/95 transition-opacity duration-200">
@@ -60,7 +60,7 @@ export function PaperModal({ open, onClose }: PaperModalProps) {
         </p>
         <div className="flex shrink-0 items-center gap-3">
           <a
-            href="/paper.pdf"
+            href="/monocular-depth-estimation-tsp-2025.pdf"
             download
             className="text-sm text-white/70 underline underline-offset-4 hover:text-white"
           >
@@ -89,7 +89,7 @@ export function PaperModal({ open, onClose }: PaperModalProps) {
           <div className="flex h-full flex-col items-center justify-center gap-4">
             <p className="text-sm text-white/70">{t("mobileMessage")}</p>
             <a
-              href="/paper.pdf"
+              href="/monocular-depth-estimation-tsp-2025.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-md bg-[#00a3b5] px-4 py-2 text-sm font-medium text-white"
@@ -100,13 +100,13 @@ export function PaperModal({ open, onClose }: PaperModalProps) {
         ) : (
           // Ensure public/paper.pdf exists before deploying
           <iframe
-            src="/paper.pdf"
-            title="PFE Paper — Partial Reproduction of Depth Anything V2"
+            src="/monocular-depth-estimation-tsp-2025.pdf"
+            title="Monocular Depth Estimation via Knowledge Distillation — TSP 2025"
             className="h-full w-full border-0"
             onLoad={() => setLoaded(true)}
           />
         )}
       </div>
     </div>
-  )
+  );
 }

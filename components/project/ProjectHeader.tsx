@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { useState } from "react"
-import { useTranslations } from "next-intl"
-import { PaperModal } from "@/components/project/PaperModal"
+import Image from "next/image";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { PaperModal } from "@/components/project/PaperModal";
 
 export function ProjectHeader() {
-  const [modalOpen, setModalOpen] = useState(false)
-  const t = useTranslations("project")
+  const [modalOpen, setModalOpen] = useState(false);
+  const t = useTranslations("project");
 
   return (
     <>
@@ -28,7 +28,7 @@ export function ProjectHeader() {
             {t("readPaper")}
           </button>
           <a
-            href="/paper.pdf"
+            href="/monocular-depth-estimation-tsp-2025.pdf"
             download
             className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
@@ -39,5 +39,5 @@ export function ProjectHeader() {
 
       <PaperModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
-  )
+  );
 }
