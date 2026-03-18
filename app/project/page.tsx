@@ -11,6 +11,7 @@ import { DeploymentSection } from "@/components/project/DeploymentSection"
 import { ResultsSection } from "@/components/project/ResultsSection"
 import { LimitationsSection } from "@/components/project/LimitationsSection"
 import { ConclusionSection } from "@/components/project/ConclusionSection"
+import { ProjectHeader } from "@/components/project/ProjectHeader"
 
 const AUTHORS = [
   "Adam Ramsis",
@@ -22,6 +23,8 @@ export default function ProjectPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <header className="mb-12 space-y-5">
+        <ProjectHeader />
+
         <Badge variant="outline">PFE 2024–2025 · Télécom SudParis</Badge>
 
         <h1 className="text-3xl font-bold leading-tight">
@@ -38,7 +41,8 @@ export default function ProjectPage() {
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Télécom SudParis — Institut Mines-Télécom &nbsp;·&nbsp; 2024–2025
+          Télécom SudParis — Institut Mines-Télécom &nbsp;·&nbsp; Institut
+          Polytechnique de Paris &nbsp;·&nbsp; 2024–2025
         </p>
 
         <p className="text-xs text-muted-foreground">
