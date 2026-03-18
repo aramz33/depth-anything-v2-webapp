@@ -1,5 +1,7 @@
 "use client";
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import Link from "next/link";
 import { SampleImages } from "./SampleImages";
 import { ImageUpload } from "./ImageUpload";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
@@ -34,6 +36,8 @@ async function runPrediction(
 }
 
 export function InferencePanel() {
+  const t = useTranslations("inferencePanel");
+  const locale = useLocale();
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,24 +64,27 @@ export function InferencePanel() {
     };
   }, [loading]);
 
-  const handleImage = useCallback(async (base64: string) => {
-    setSelectedSample(null);
-    setCompletedElapsed(null);
-    startTimeRef.current = Date.now();
-    setLoading(true);
-    setError(null);
-    try {
-      const resized = await resizeImage(base64);
-      const r = await runPrediction(resized);
-      setResult(r);
-      setCompletedElapsed((Date.now() - startTimeRef.current) / 1000);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      setError(`Inference failed: ${msg}`);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const handleImage = useCallback(
+    async (base64: string) => {
+      setSelectedSample(null);
+      setCompletedElapsed(null);
+      startTimeRef.current = Date.now();
+      setLoading(true);
+      setError(null);
+      try {
+        const resized = await resizeImage(base64);
+        const r = await runPrediction(resized);
+        setResult(r);
+        setCompletedElapsed((Date.now() - startTimeRef.current) / 1000);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        setError(t("errorPrefix", { message: msg }));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t],
+  );
 
   const handleSample = useCallback(
     async (sample: Sample) => {
@@ -94,11 +101,11 @@ export function InferencePanel() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        <Badge variant="outline">ViT-Small · 25M params</Badge>
-        <Badge variant="outline">Hosted on HF Spaces</Badge>
+        <Badge variant="outline">{t("badge1")}</Badge>
+        <Badge variant="outline">{t("badge2")}</Badge>
         {completedElapsed !== null && (
           <Badge variant="secondary">
-            Inference: {completedElapsed.toFixed(1)}s
+            {t("inferenceTime", { time: completedElapsed.toFixed(1) })}
           </Badge>
         )}
       </div>
@@ -106,10 +113,20 @@ export function InferencePanel() {
       <SampleImages selected={selectedSample} onSelect={handleSample} />
       <ImageUpload onImage={handleImage} />
 
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <span>On mobile?</span>
+        <Link
+          href={`/${locale}/camera`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+        >
+          📷 Use Camera
+        </Link>
+      </div>
+
       {loading && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          Running inference…
+          {t("running")}
           <span className="font-mono">{elapsed.toFixed(1)}s</span>
         </div>
       )}
@@ -118,7 +135,7 @@ export function InferencePanel() {
 
       {result && !loading && (
         <div className="space-y-4">
-          <p className="text-sm font-medium">Result — drag the slider</p>
+          <p className="text-sm font-medium">{t("result")}</p>
           <BeforeAfterSlider
             original={result.original}
             colorized={result.colorized}
@@ -126,23 +143,23 @@ export function InferencePanel() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="mb-2 text-xs text-muted-foreground">
-                Grayscale depth
+                {t("grayscaleLabel")}
               </p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={result.grayscale}
-                alt="Grayscale depth map"
+                alt={t("grayscaleAlt")}
                 className="w-full rounded-lg border border-border"
               />
             </div>
             <div>
               <p className="mb-2 text-xs text-muted-foreground">
-                Colorized depth
+                {t("colorizedLabel")}
               </p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={result.colorized}
-                alt="Colorized depth map"
+                alt={t("colorizedAlt")}
                 className="w-full rounded-lg border border-border"
               />
             </div>

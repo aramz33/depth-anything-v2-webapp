@@ -1,6 +1,7 @@
 "use client"
 import { useCallback } from "react"
 import { useDropzone } from "react-dropzone"
+import { useTranslations } from "next-intl"
 
 interface Props {
   onImage: (base64: string) => void
@@ -10,6 +11,8 @@ const ACCEPTED = { "image/jpeg": [], "image/png": [], "image/webp": [] }
 const MAX_SIZE = 5 * 1024 * 1024
 
 export function ImageUpload({ onImage }: Props) {
+  const t = useTranslations("imageUpload")
+
   const onDrop = useCallback(
     (files: File[]) => {
       const file = files[0]
@@ -29,7 +32,7 @@ export function ImageUpload({ onImage }: Props) {
   return (
     <div>
       <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        Or upload your own
+        {t("label")}
       </p>
       <div
         {...getRootProps()}
@@ -39,9 +42,9 @@ export function ImageUpload({ onImage }: Props) {
       >
         <input {...getInputProps()} />
         <p className="text-sm text-muted-foreground">
-          {isDragActive ? "Drop it here…" : "Drag & drop or click to upload"}
+          {isDragActive ? t("dropActive") : t("dropIdle")}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">JPEG, PNG, WebP · max 5 MB</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("hint")}</p>
       </div>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>

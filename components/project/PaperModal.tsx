@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 
 interface PaperModalProps {
   open: boolean
@@ -11,6 +12,7 @@ interface PaperModalProps {
 export function PaperModal({ open, onClose }: PaperModalProps) {
   const [loaded, setLoaded] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const t = useTranslations("paperModal")
 
   // Detect iOS/mobile — PDF iframes don't render inline on iOS Safari
   useEffect(() => {
@@ -54,7 +56,7 @@ export function PaperModal({ open, onClose }: PaperModalProps) {
           className="object-contain object-left"
         />
         <p className="flex-1 truncate text-center text-sm text-white/70">
-          Partial Reproduction of Depth Anything V2
+          {t("title")}
         </p>
         <div className="flex shrink-0 items-center gap-3">
           <a
@@ -62,14 +64,14 @@ export function PaperModal({ open, onClose }: PaperModalProps) {
             download
             className="text-sm text-white/70 underline underline-offset-4 hover:text-white"
           >
-            ↓ Download PDF
+            {t("downloadPdf")}
           </a>
           <button
             onClick={onClose}
             aria-label="Close paper viewer"
             className="rounded p-1 text-white/70 hover:bg-white/10 hover:text-white"
           >
-            ✕
+            {t("close")}
           </button>
         </div>
       </div>
@@ -85,16 +87,14 @@ export function PaperModal({ open, onClose }: PaperModalProps) {
 
         {isMobile ? (
           <div className="flex h-full flex-col items-center justify-center gap-4">
-            <p className="text-sm text-white/70">
-              PDF preview is not available on mobile.
-            </p>
+            <p className="text-sm text-white/70">{t("mobileMessage")}</p>
             <a
               href="/paper.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-md bg-[#00a3b5] px-4 py-2 text-sm font-medium text-white"
             >
-              Open PDF
+              {t("openPdf")}
             </a>
           </div>
         ) : (

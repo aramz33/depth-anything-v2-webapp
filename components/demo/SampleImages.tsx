@@ -1,5 +1,6 @@
 "use client"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import { SAMPLES, type Sample } from "@/lib/samples"
 import { cn } from "@/lib/utils"
 
@@ -9,16 +10,19 @@ interface Props {
 }
 
 export function SampleImages({ selected, onSelect }: Props) {
+  const t = useTranslations("sampleImages")
+
   return (
     <div>
       <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        Sample images
+        {t("label")}
       </p>
       <div className="flex flex-wrap gap-2">
         {SAMPLES.map((s) => (
           <button
             key={s.id}
             onClick={() => onSelect(s)}
+            title={t(s.id as "indoor" | "street" | "portrait" | "landscape" | "object")}
             className={cn(
               "overflow-hidden rounded-md border-2 transition-all",
               selected === s.id
@@ -28,7 +32,7 @@ export function SampleImages({ selected, onSelect }: Props) {
           >
             <Image
               src={s.src}
-              alt={s.label}
+              alt={t(s.id as "indoor" | "street" | "portrait" | "landscape" | "object")}
               width={80}
               height={60}
               className="h-[60px] w-[80px] object-cover"

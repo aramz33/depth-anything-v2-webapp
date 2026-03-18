@@ -1,13 +1,17 @@
-import Link from "next/link";
-import Image from "next/image";
-
-const links = [
-  { href: "/project", label: "Project" },
-  { href: "/demo", label: "Demo" },
-  { href: "/about", label: "About" },
-];
+import Image from "next/image"
+import { useTranslations } from "next-intl"
+import { Link } from "@/lib/navigation"
+import { LanguageSwitcher } from "./LanguageSwitcher"
 
 export function Navbar() {
+  const t = useTranslations("nav")
+
+  const links = [
+    { href: "/project" as const, label: t("project") },
+    { href: "/demo" as const, label: t("demo") },
+    { href: "/about" as const, label: t("about") },
+  ]
+
   return (
     <header
       className="sticky top-0 z-50 border-b"
@@ -34,7 +38,7 @@ export function Navbar() {
               letterSpacing: "0.15em",
             }}
           >
-            Depth Anything V2
+            {t("appTitle")}
           </span>
         </Link>
 
@@ -49,6 +53,7 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          <LanguageSwitcher />
           <a
             href="https://huggingface.co/spaces/aramsis/depth-anything-v2-pfe-tsp"
             target="_blank"
@@ -60,10 +65,10 @@ export function Navbar() {
               letterSpacing: "0.1em",
             }}
           >
-            HF Space ↗
+            {t("hfSpace")}
           </a>
         </nav>
       </div>
     </header>
-  );
+  )
 }

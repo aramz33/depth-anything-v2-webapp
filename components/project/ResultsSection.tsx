@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { METRICS, METRICS_NOTE } from "@/lib/metrics";
 import {
   BarChart,
@@ -14,7 +15,8 @@ import {
 const fmt = (v: number | null) => (v != null ? v.toFixed(3) : "—");
 
 export function ResultsSection() {
-  // Only include rows with at least one delta value for the chart
+  const t = useTranslations("results");
+
   const chartData = METRICS.filter(
     (m) => m.delta1 != null || m.delta2 != null || m.delta3 != null,
   ).map((m) => ({
@@ -24,16 +26,21 @@ export function ResultsSection() {
     "δ3 (↑)": m.delta3 ?? 0,
   }));
 
+  const tableHeaders = [
+    t("colDataset"),
+    t("colModel"),
+    "AbsRel ↓",
+    "RMSE ↓",
+    "log10 ↓",
+    "δ1 ↑",
+    "δ2 ↑",
+    "δ3 ↑",
+  ];
+
   return (
     <section id="results" className="scroll-mt-20 space-y-6">
-      <h2 className="text-2xl font-bold">7. Experiments &amp; Results</h2>
-      <p className="text-muted-foreground">
-        The student model is evaluated on two standard held-out benchmarks:
-        NYU-Depth V2 (indoor) and KITTI (outdoor driving). Relative depth
-        predictions are scale-shift aligned to ground truth via closed-form
-        least-squares before metric computation. No benchmark images are seen
-        during training. KITTI results are pending.
-      </p>
+      <h2 className="text-2xl font-bold">{t("heading")}</h2>
+      <p className="text-muted-foreground">{t("intro")}</p>
 
       <figure>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -43,9 +50,7 @@ export function ResultsSection() {
           className="w-full rounded-lg border border-border"
         />
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">
-          Figure 4 — Evaluation framework. The trained student is applied to
-          benchmark test sets; predictions are scale-shift aligned before
-          computing AbsRel, RMSE, and threshold accuracy metrics.
+          {t("fig4Caption")}
         </figcaption>
       </figure>
 
@@ -55,16 +60,7 @@ export function ResultsSection() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              {[
-                "Dataset",
-                "Model",
-                "AbsRel ↓",
-                "RMSE ↓",
-                "log10 ↓",
-                "δ1 ↑",
-                "δ2 ↑",
-                "δ3 ↑",
-              ].map((h) => (
+              {tableHeaders.map((h) => (
                 <th key={h} className="px-4 py-3 text-left font-medium">
                   {h}
                 </th>
@@ -92,9 +88,7 @@ export function ResultsSection() {
       </div>
 
       <div className="rounded-lg border border-border p-4">
-        <p className="mb-4 text-sm font-medium">
-          Threshold accuracy (δ1, δ2, δ3)
-        </p>
+        <p className="mb-4 text-sm font-medium">{t("chartTitle")}</p>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />

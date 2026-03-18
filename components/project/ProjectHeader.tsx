@@ -2,10 +2,12 @@
 
 import Image from "next/image"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { PaperModal } from "@/components/project/PaperModal"
 
 export function ProjectHeader() {
   const [modalOpen, setModalOpen] = useState(false)
+  const t = useTranslations("project")
 
   return (
     <>
@@ -23,14 +25,14 @@ export function ProjectHeader() {
             onClick={() => setModalOpen(true)}
             className="rounded-md bg-[#00a3b5] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
           >
-            Read Paper
+            {t("readPaper")}
           </button>
           <a
             href="/paper.pdf"
             download
             className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
-            ↓ Download PDF
+            {t("downloadPdf")}
           </a>
         </div>
       </div>
