@@ -47,9 +47,9 @@
     "subtitleLink": "Hugging Face Spaces"
   },
   "project": {
-    "badge": "PFE 2024–2025 · Télécom SudParis",
+    "badge": "PFE 2025–2026 · Télécom SudParis",
     "title": "Partial Reproduction of Depth Anything V2: Monocular Depth Estimation via Knowledge Distillation",
-    "affiliation": "Télécom SudParis — Institut Mines-Télécom · Institut Polytechnique de Paris · 2024–2025",
+    "affiliation": "Télécom SudParis — Institut Mines-Télécom · Institut Polytechnique de Paris · 2025–2026",
     "keywords": "monocular depth estimation · knowledge distillation · Vision Transformer · DPT · synthetic-to-real transfer · pseudo-labels",
     "keywordsLabel": "Keywords:",
     "onThisPage": "On this page",
