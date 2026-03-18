@@ -22,7 +22,7 @@
     "subheadline": "Une reproduction de Depth Anything V2 — entraînement d'un modèle étudiant léger ViT-Small par distillation de connaissance depuis un enseignant DINOv2-Giant, déployé à grande échelle sur Hugging Face Spaces.",
     "ctaDemo": "Essayer la démo →",
     "ctaDocs": "Lire la documentation",
-    "ctaGithub": "GitHub ↗",
+    "ctaGithub": "GitHub",
     "divider": "Fonctionnalités clés",
     "feature1Title": "Profondeur depuis une image",
     "feature1Desc": "Prédit des cartes de profondeur par pixel à partir d'images RGB non calibrées, grâce à un backbone ViT et un décodeur DPT.",

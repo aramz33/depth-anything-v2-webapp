@@ -24,7 +24,7 @@
     "subheadline": "A reproduction of Depth Anything V2 — training a lightweight ViT-Small student model via knowledge distillation from a DINOv2-Giant teacher, deployed at scale on Hugging Face Spaces.",
     "ctaDemo": "Try the Demo →",
     "ctaDocs": "Read the Docs",
-    "ctaGithub": "GitHub ↗",
+    "ctaGithub": "GitHub",
     "divider": "Key capabilities",
     "feature1Title": "Single-Image Depth",
     "feature1Desc": "Predicts per-pixel depth maps from uncalibrated RGB images using a ViT backbone and DPT decoder.",
