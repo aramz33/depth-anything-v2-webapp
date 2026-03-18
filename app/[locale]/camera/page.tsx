@@ -17,6 +17,7 @@ export default function CameraPage() {
 
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<Result | null>(null);
+  const [frozenFrame, setFrozenFrame] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const startCamera = useCallback(async () => {
@@ -52,6 +53,7 @@ export default function CameraPage() {
     canvas.height = video.videoHeight;
     canvas.getContext("2d")?.drawImage(video, 0, 0);
 
+    setFrozenFrame(canvas.toDataURL("image/jpeg", 0.88));
     setStatus("loading");
     setResult(null);
     setError(null);
@@ -79,6 +81,7 @@ export default function CameraPage() {
 
   const reset = useCallback(() => {
     setResult(null);
+    setFrozenFrame(null);
     setError(null);
     setStatus("streaming");
   }, []);
@@ -93,9 +96,21 @@ export default function CameraPage() {
           playsInline
           muted
           className="h-full w-full object-cover"
-          style={{ display: status === "done" ? "none" : "block" }}
+          style={{
+            display:
+              status === "streaming" || status === "idle" ? "block" : "none",
+          }}
         />
         <canvas ref={canvasRef} className="hidden" />
+
+        {/* Frozen frame shown while loading */}
+        {frozenFrame && status === "loading" && (
+          <img
+            src={frozenFrame}
+            alt="Captured frame"
+            className="h-full w-full object-cover"
+          />
+        )}
 
         {/* Depth result overlay */}
         {status === "done" && result && (
@@ -138,20 +153,12 @@ export default function CameraPage() {
       {/* Bottom controls */}
       <div className="flex items-center justify-center gap-6 bg-black px-6 py-8">
         {status === "done" ? (
-          <>
-            <button
-              onClick={reset}
-              className="rounded-full border border-white/30 px-6 py-3 text-sm font-medium"
-            >
-              Retake
-            </button>
-            <button
-              onClick={capture}
-              className="rounded-full bg-white px-6 py-3 text-sm font-medium text-black"
-            >
-              Retake &amp; infer
-            </button>
-          </>
+          <button
+            onClick={reset}
+            className="rounded-full border border-white/30 px-6 py-3 text-sm font-medium"
+          >
+            Retake
+          </button>
         ) : (
           <button
             onClick={capture}
