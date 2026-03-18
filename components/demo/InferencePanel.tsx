@@ -39,13 +39,15 @@ export function InferencePanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [completedElapsed, setCompletedElapsed] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
     if (loading) {
       setElapsed(0);
       intervalRef.current = setInterval(() => {
-        setElapsed((t) => Math.round((t + 0.1) * 10) / 10);
+        setElapsed((Date.now() - startTimeRef.current) / 1000);
       }, 100);
     } else {
       if (intervalRef.current) {
@@ -60,12 +62,15 @@ export function InferencePanel() {
 
   const handleImage = useCallback(async (base64: string) => {
     setSelectedSample(null);
+    setCompletedElapsed(null);
+    startTimeRef.current = Date.now();
     setLoading(true);
     setError(null);
     try {
       const resized = await resizeImage(base64);
       const r = await runPrediction(resized);
       setResult(r);
+      setCompletedElapsed((Date.now() - startTimeRef.current) / 1000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       setError(`Inference failed: ${msg}`);
@@ -91,9 +96,9 @@ export function InferencePanel() {
       <div className="flex flex-wrap gap-2">
         <Badge variant="outline">ViT-Small · 25M params</Badge>
         <Badge variant="outline">Hosted on HF Spaces</Badge>
-        {result && (
+        {completedElapsed !== null && (
           <Badge variant="secondary">
-            Inference: {(result.inferenceMs / 1000).toFixed(1)}s
+            Inference: {completedElapsed.toFixed(1)}s
           </Badge>
         )}
       </div>
