@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getGroqClient, GROQ_MODEL } from "@/lib/groq-client";
+import { toDataUri } from "@/lib/parse-base64";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
 
-function parseBase64(raw: string): {
-  mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
-  data: string;
-} {
-  const [mimeTypePart, data] = raw.includes(",")
-    ? (raw.split(",") as [string, string])
-    : ["data:image/jpeg;base64", raw];
-  const mediaType = mimeTypePart
-    .replace("data:", "")
-    .replace(";base64", "") as
-    | "image/jpeg"
-    | "image/png"
-    | "image/gif"
-    | "image/webp";
-  return { mediaType, data };
-}
-
-const BASE_SYSTEM_PROMPT =
-  "Tu es un expert en analyse spatiale et aménagement intérieur. Tu reçois l'image originale ET sa depth map colorisée (zones chaudes = proches, zones froides = lointaines). Utilise la depth map pour raisonner sur les dimensions réelles de l'espace, les distances entre objets, les zones libres. Réponds de façon concise et précise en te basant sur la géométrie visible.";
+const SYSTEM_PROMPTS: Record<string, string> = {
+  fr:
+    "Tu es un expert en analyse spatiale et amenagement interieur. Tu recois l'image originale et sa depth map colorisee (zones chaudes = proches, zones froides = lointaines). " +
+    "Utilise la depth map pour raisonner sur les dimensions de l'espace, les distances entre objets et les zones libres. Reponds de facon concise et precise. " +
+    "Si la question n'est pas liee a l'analyse spatiale, au placement d'objets, aux distances ou a la scene visible, reponds brievement que tu ne peux repondre qu'aux questions sur l'espace et le placement.",
+  en:
+    "You are an expert in spatial analysis and interior layout. You receive the original image and its colorized depth map (warm zones = close, cool zones = far). " +
+    "Use the depth map to reason about space dimensions, distances between objects, and free areas. Be concise and precise. " +
+    "If the question is not related to spatial analysis, object placement, distances, or the visible scene, briefly explain that you can only answer questions about the space and layout.",
+};
 
 export async function POST(req: NextRequest) {
   let imageBase64: string;
@@ -55,45 +49,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { mediaType, data: b64data } = parseBase64(imageBase64);
+  const systemPrompt = SYSTEM_PROMPTS[locale] ?? SYSTEM_PROMPTS["fr"];
 
-  const imageContent: Anthropic.ImageBlockParam = {
-    type: "image",
-    source: { type: "base64", media_type: mediaType, data: b64data },
-  };
-
-  let depthContent: Anthropic.ImageBlockParam | undefined;
-  if (depthMapBase64) {
-    const { mediaType: dmMime, data: dmData } = parseBase64(depthMapBase64);
-    depthContent = {
-      type: "image",
-      source: { type: "base64", media_type: dmMime, data: dmData },
-    };
-  }
-
-  const userContent: Anthropic.ContentBlockParam[] = [
-    imageContent,
-    ...(depthContent ? [depthContent] : []),
+  const userContent: ContentPart[] = [
+    { type: "image_url", image_url: { url: toDataUri(imageBase64) } },
+    ...(depthMapBase64
+      ? [{ type: "image_url", image_url: { url: toDataUri(depthMapBase64) } } satisfies ContentPart]
+      : []),
     { type: "text", text: query },
   ];
 
   try {
-    const langInstruction = `Réponds toujours dans la même langue que l'interface utilisateur. La locale actuelle est ${locale} (fr = français, en = anglais). Si locale = 'fr', réponds en français. Si locale = 'en', réponds en anglais.`;
-
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+    const completion = await getGroqClient().chat.completions.create({
+      model: GROQ_MODEL,
       max_tokens: 512,
-      system: `${BASE_SYSTEM_PROMPT} ${langInstruction}`,
-      messages: [{ role: "user", content: userContent }],
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
     });
 
-    const response =
-      message.content[0]?.type === "text" ? message.content[0].text : "";
+    const response = completion.choices[0]?.message?.content ?? "";
 
     return NextResponse.json({ response });
   } catch (err) {
     return NextResponse.json(
-      { error: `Claude API error: ${String(err)}` },
+      { error: `Groq API error: ${String(err)}` },
       { status: 502 },
     );
   }
