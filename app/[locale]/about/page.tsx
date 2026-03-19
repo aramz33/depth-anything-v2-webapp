@@ -1,14 +1,14 @@
-import { setRequestLocale, getTranslations } from "next-intl/server"
-import { TEAM } from "@/lib/team"
+import { setRequestLocale, getTranslations } from "next-intl/server";
+import { TEAM } from "@/lib/team";
 
 export default async function AboutPage({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params
-  setRequestLocale(locale)
-  const t = await getTranslations("about")
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("about");
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
@@ -60,7 +60,7 @@ export default async function AboutPage({
           <li>
             <span className="text-muted-foreground">{t("githubLabel")}</span>
             <a
-              href="https://github.com/aramsis/Monocular-Depth-Vision-PFE"
+              href="https://github.com/pl-plt/Monocular-Depth-Vision-PFE"
               className="underline underline-offset-4 hover:text-foreground"
               target="_blank"
               rel="noopener noreferrer"
@@ -71,5 +71,5 @@ export default async function AboutPage({
         </ul>
       </div>
     </div>
-  )
+  );
 }

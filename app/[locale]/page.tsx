@@ -1,16 +1,16 @@
-import { setRequestLocale, getTranslations } from "next-intl/server"
-import { Link } from "@/lib/navigation"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { setRequestLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/lib/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default async function HeroPage({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params
-  setRequestLocale(locale)
-  const t = await getTranslations("home")
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("home");
 
   return (
     <div className="tsp-hero-bg min-h-screen">
@@ -117,7 +117,7 @@ export default async function HeroPage({
             style={{ color: "rgba(240,247,255,0.6)", letterSpacing: "0.1em" }}
           >
             <a
-              href="https://github.com/aramsis/Monocular-Depth-Vision-PFE"
+              href="https://github.com/pl-plt/Monocular-Depth-Vision-PFE"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -193,5 +193,5 @@ export default async function HeroPage({
         </div>
       </div>
     </div>
-  )
+  );
 }
