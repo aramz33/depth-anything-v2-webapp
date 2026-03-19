@@ -1,30 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getGroqClient, GROQ_MODEL } from "@/lib/groq-client";
+import { toDataUri } from "@/lib/parse-base64";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
 
-const TRANSPORT_LABELS: Record<string, string> = {
-  car: "voiture",
-  bike: "vélo",
-  walk: "à pied",
+const TRANSPORT_LABELS: Record<string, Record<string, string>> = {
+  car:  { fr: "voiture", en: "car" },
+  bike: { fr: "velo",    en: "bike" },
+  walk: { fr: "a pied",  en: "on foot" },
 };
-
-function parseBase64(raw: string): {
-  mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
-  data: string;
-} {
-  const [mimeTypePart, data] = raw.includes(",")
-    ? (raw.split(",") as [string, string])
-    : ["data:image/jpeg;base64", raw];
-  const mediaType = mimeTypePart
-    .replace("data:", "")
-    .replace(";base64", "") as
-    | "image/jpeg"
-    | "image/png"
-    | "image/gif"
-    | "image/webp";
-  return { mediaType, data };
-}
 
 export async function POST(req: NextRequest) {
   let imageBase64: string;
@@ -54,53 +40,45 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { mediaType, data: b64data } = parseBase64(imageBase64);
-  const transportLabel = TRANSPORT_LABELS[transport] ?? transport;
+  const transportLabel =
+    TRANSPORT_LABELS[transport]?.[locale] ??
+    TRANSPORT_LABELS[transport]?.["fr"] ??
+    transport;
 
-  const langInstruction = `Réponds toujours dans la même langue que l'interface utilisateur. La locale actuelle est ${locale} (fr = français, en = anglais). Si locale = 'fr', réponds en français. Si locale = 'en', réponds en anglais.`;
+  const langInstruction =
+    locale === "en"
+      ? "Always respond in English."
+      : "Reponds toujours en francais.";
 
-  const systemPrompt = `Tu es un système d'analyse de sécurité embarqué. Tu reçois l'image originale ET sa depth map colorisée (chaud = proche, froid = loin). Utilise la depth map pour estimer les distances réelles des obstacles. Mode : ${transportLabel}, Vitesse : ${speedKmh} km/h. Identifie les obstacles dangereux avec leur distance estimée en mètres. Réponds UNIQUEMENT en JSON : { level: 'safe'|'warning'|'danger', alert: string } ${langInstruction}`;
+  const systemPrompt =
+    `You are an embedded safety analysis system. You receive the original image and its colorized depth map (warm colors = close, cool colors = far). ` +
+    `Use the depth map to estimate distances to obstacles. ` +
+    `Mode: ${transportLabel}, Speed: ${speedKmh} km/h. ` +
+    `Identify dangerous obstacles with their estimated relative distance. ` +
+    `Respond ONLY with valid JSON: { "level": "safe"|"warning"|"danger", "alert": string }. ` +
+    langInstruction;
 
-  const imageContent: Anthropic.ImageBlockParam = {
-    type: "image",
-    source: { type: "base64", media_type: mediaType, data: b64data },
-  };
-
-  let depthContent: Anthropic.ImageBlockParam | undefined;
-  if (depthMapBase64) {
-    const { mediaType: dmMime, data: dmData } = parseBase64(depthMapBase64);
-    depthContent = {
-      type: "image",
-      source: { type: "base64", media_type: dmMime, data: dmData },
-    };
-  }
-
-  const userContent: Anthropic.ContentBlockParam[] = [
-    imageContent,
-    ...(depthContent ? [depthContent] : []),
-    { type: "text", text: "Analyse la scène." },
+  const userContent: ContentPart[] = [
+    { type: "image_url", image_url: { url: toDataUri(imageBase64) } },
+    ...(depthMapBase64
+      ? [{ type: "image_url", image_url: { url: toDataUri(depthMapBase64) } } satisfies ContentPart]
+      : []),
+    { type: "text", text: "Analyse la scene." },
   ];
 
   try {
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+    const completion = await getGroqClient().chat.completions.create({
+      model: GROQ_MODEL,
       max_tokens: 256,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userContent }],
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
     });
 
-    const raw =
-      message.content[0]?.type === "text" ? message.content[0].text : "";
-
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return NextResponse.json(
-        { error: "Unexpected response format from Claude", detail: raw },
-        { status: 502 },
-      );
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]) as {
+    const raw = completion.choices[0]?.message?.content ?? "";
+    const parsed = JSON.parse(raw) as {
       level: "safe" | "warning" | "danger";
       alert: string;
     };
@@ -108,7 +86,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ level: parsed.level, alert: parsed.alert });
   } catch (err) {
     return NextResponse.json(
-      { error: `Claude API error: ${String(err)}` },
+      { error: `Groq API error: ${String(err)}` },
       { status: 502 },
     );
   }
