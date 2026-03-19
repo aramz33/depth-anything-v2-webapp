@@ -7,9 +7,9 @@ type ContentPart =
   | { type: "image_url"; image_url: { url: string } };
 
 const TRANSPORT_LABELS: Record<string, Record<string, string>> = {
-  car:  { fr: "voiture", en: "car" },
-  bike: { fr: "velo",    en: "bike" },
-  walk: { fr: "a pied",  en: "on foot" },
+  car: { fr: "voiture", en: "car" },
+  bike: { fr: "velo", en: "bike" },
+  walk: { fr: "a pied", en: "on foot" },
 };
 
 export async function POST(req: NextRequest) {
@@ -51,8 +51,10 @@ export async function POST(req: NextRequest) {
       : "Reponds toujours en francais.";
 
   const systemPrompt =
-    `You are an embedded safety analysis system. You receive the original image and its colorized depth map (warm colors = close, cool colors = far). ` +
-    `Use the depth map to estimate distances to obstacles. ` +
+    `You are an embedded safety analysis system. You receive two images: first the original color image, then its colorized disparity map. ` +
+    `IMPORTANT depth convention: bright/warm colors (yellow, orange, red) = CLOSE to camera; dark/cool colors (purple, black, blue) = FAR from camera. ` +
+    `In grayscale: white = close, black = far. Do NOT invert this. ` +
+    `Use the disparity map combined with the color image to estimate distances to obstacles. ` +
     `Mode: ${transportLabel}, Speed: ${speedKmh} km/h. ` +
     `Identify dangerous obstacles with their estimated relative distance. ` +
     `Respond ONLY with valid JSON: { "level": "safe"|"warning"|"danger", "alert": string }. ` +
@@ -61,7 +63,12 @@ export async function POST(req: NextRequest) {
   const userContent: ContentPart[] = [
     { type: "image_url", image_url: { url: toDataUri(imageBase64) } },
     ...(depthMapBase64
-      ? [{ type: "image_url", image_url: { url: toDataUri(depthMapBase64) } } satisfies ContentPart]
+      ? [
+          {
+            type: "image_url",
+            image_url: { url: toDataUri(depthMapBase64) },
+          } satisfies ContentPart,
+        ]
       : []),
     { type: "text", text: "Analyse la scene." },
   ];
