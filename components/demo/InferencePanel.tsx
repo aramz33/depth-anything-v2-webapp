@@ -90,7 +90,13 @@ async function runAnalysis(
   const res = await fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageBase64, depthMapBase64, transport, speedKmh, locale }),
+    body: JSON.stringify({
+      imageBase64,
+      depthMapBase64,
+      transport,
+      speedKmh,
+      locale,
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error ?? "Analysis failed");
@@ -117,11 +123,19 @@ async function sendChatMessage(
   messages: ChatMessage[],
   imageBase64: string,
   safetyResult: SafetyAlert | null,
+  depthMapBase64: string | null,
+  locale: string,
 ): Promise<ChatMessage[]> {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, imageBase64, safetyResult }),
+    body: JSON.stringify({
+      messages,
+      imageBase64,
+      safetyResult,
+      depthMapBase64,
+      locale,
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error ?? "Chat failed");
@@ -218,7 +232,7 @@ export function InferencePanel() {
     if (!result) return;
     setChatMessages([]);
     setChatLoading(true);
-    sendChatMessage([], result.original, null)
+    sendChatMessage([], result.original, null, depthMapBase64, locale)
       .then((msgs) => setChatMessages(msgs))
       .catch(() => {})
       .finally(() => setChatLoading(false));
@@ -346,6 +360,8 @@ export function InferencePanel() {
         nextMessages,
         result.original,
         safetyAlert,
+        depthMapBase64,
+        locale,
       );
       setChatMessages(updated);
     } catch (err) {
@@ -610,7 +626,9 @@ export function InferencePanel() {
                 />
                 <button
                   onClick={() => handleSpatialSubmit()}
-                  disabled={!spatialQuery.trim() || spatialLoading || depthMapLoading}
+                  disabled={
+                    !spatialQuery.trim() || spatialLoading || depthMapLoading
+                  }
                   className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-40"
                 >
                   {spatialLoading && (
