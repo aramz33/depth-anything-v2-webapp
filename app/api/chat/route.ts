@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getGroqClient, GROQ_MODEL } from "@/lib/groq-client";
+import { toDataUri } from "@/lib/parse-base64";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -13,22 +16,36 @@ interface SafetyResult {
   alert: string;
 }
 
-// Automatically sent as the very first user turn to seed the conversation
-const INIT_PROMPT =
-  "Décris cette scène en 2-3 phrases en mentionnant les objets principaux et leurs distances relatives.";
+const INIT_PROMPTS: Record<string, string> = {
+  fr: "Decris cette scene en 2-3 phrases en mentionnant les objets principaux et leurs distances relatives.",
+  en: "Describe this scene in 2-3 sentences, mentioning the main objects and their relative distances.",
+};
+
+const SYSTEM_PROMPTS: Record<string, string> = {
+  fr:
+    "Tu es un assistant expert en analyse de scene et perception spatiale. Tu as acces a l'image originale et sa depth map colorisee. " +
+    "Tu peux repondre a des questions sur la scene : distances, objets presents, placement de meubles, dangers, accessibilite. Sois concis et precis. " +
+    "Si l'utilisateur pose une question sans rapport avec la profondeur, les obstacles, les distances ou l'analyse spatiale de la scene, reponds brievement que tu ne peux repondre qu'aux questions concernant la scene, les distances et le placement.",
+  en:
+    "You are an expert assistant for scene analysis and spatial perception. You have access to the original image and its colorized depth map. " +
+    "You can answer questions about the scene: distances, objects present, furniture placement, dangers, accessibility. Be concise and precise. " +
+    "If the user asks a question unrelated to depth, obstacles, distances, or spatial analysis of the scene, briefly explain that you can only answer questions about the scene, distances, and layout.",
+};
 
 export async function POST(req: NextRequest) {
   let messages: ChatMessage[];
   let imageBase64: string;
   let depthMapBase64: string | undefined;
   let safetyResult: SafetyResult | null;
+  let locale: string;
 
   try {
     const body = await req.json();
     messages = body.messages ?? [];
     imageBase64 = body.imageBase64;
-    depthMapBase64 = body.depthMapBase64; // accepted but optional
+    depthMapBase64 = body.depthMapBase64;
     safetyResult = body.safetyResult ?? null;
+    locale = body.locale ?? "fr";
   } catch {
     return NextResponse.json(
       { error: "Failed to parse request body" },
@@ -43,70 +60,36 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const [mimeTypePart, b64data] = imageBase64.includes(",")
-    ? (imageBase64.split(",") as [string, string])
-    : ["data:image/jpeg;base64", imageBase64];
-  const mediaType = mimeTypePart
-    .replace("data:", "")
-    .replace(";base64", "") as
-    | "image/jpeg"
-    | "image/png"
-    | "image/gif"
-    | "image/webp";
-
   const safetyContext = safetyResult
-    ? `\n\nRésultat d'analyse de sécurité : niveau "${safetyResult.level}" — ${safetyResult.alert}`
+    ? `\n\nSafety analysis result: level "${safetyResult.level}" - ${safetyResult.alert}`
     : "";
 
-  // The Anthropic messages array always starts with the image turn.
-  // Subsequent turns from the stored history are appended as plain text.
-  const imageContent: Anthropic.ImageBlockParam = {
-    type: "image",
-    source: { type: "base64", media_type: mediaType, data: b64data },
-  };
+  const initPrompt = (INIT_PROMPTS[locale] ?? INIT_PROMPTS["fr"]) + safetyContext;
+  const systemPrompt = SYSTEM_PROMPTS[locale] ?? SYSTEM_PROMPTS["fr"];
 
-  // If a depth map is provided, include it as a second image in the first turn
-  let depthContent: Anthropic.ImageBlockParam | null = null;
-  if (depthMapBase64) {
-    const [dmMime, dmB64] = depthMapBase64.includes(",")
-      ? (depthMapBase64.split(",") as [string, string])
-      : ["data:image/jpeg;base64", depthMapBase64];
-    depthContent = {
-      type: "image",
-      source: {
-        type: "base64",
-        media_type: dmMime.replace("data:", "").replace(";base64", "") as
-          | "image/jpeg"
-          | "image/png"
-          | "image/gif"
-          | "image/webp",
-        data: dmB64,
-      },
-    };
-  }
-
-  const firstUserContent: Anthropic.ContentBlockParam[] = [
-    imageContent,
-    ...(depthContent ? [depthContent] : []),
-    { type: "text", text: INIT_PROMPT + safetyContext },
+  const firstUserContent: ContentPart[] = [
+    { type: "image_url", image_url: { url: toDataUri(imageBase64) } },
+    ...(depthMapBase64
+      ? [{ type: "image_url", image_url: { url: toDataUri(depthMapBase64) } } satisfies ContentPart]
+      : []),
+    { type: "text", text: initPrompt },
   ];
 
-  const anthropicMessages: Anthropic.MessageParam[] = [
-    { role: "user", content: firstUserContent },
-    ...messages.map((m) => ({ role: m.role, content: m.content })),
-  ];
+  const historyMessages: { role: "user" | "assistant"; content: string }[] =
+    messages.map((m) => ({ role: m.role, content: m.content }));
 
   try {
-    const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+    const completion = await getGroqClient().chat.completions.create({
+      model: GROQ_MODEL,
       max_tokens: 512,
-      system:
-        "Tu es un assistant expert en analyse de scène et perception spatiale. Tu as accès à l'image originale, sa depth map (carte de profondeur colorisée) et un résultat d'analyse de sécurité. Tu peux répondre à des questions sur la scène : distances, objets présents, placement possible de meubles, dangers, accessibilité, etc. Sois concis et précis.",
-      messages: anthropicMessages,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: firstUserContent },
+        ...historyMessages,
+      ],
     });
 
-    const assistantText =
-      response.content[0]?.type === "text" ? response.content[0].text : "";
+    const assistantText = completion.choices[0]?.message?.content ?? "";
 
     const updatedMessages: ChatMessage[] = [
       ...messages,
@@ -116,7 +99,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ messages: updatedMessages });
   } catch (err) {
     return NextResponse.json(
-      { error: `Claude API error: ${String(err)}` },
+      { error: `Groq API error: ${String(err)}` },
       { status: 502 },
     );
   }
