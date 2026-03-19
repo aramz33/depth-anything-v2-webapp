@@ -337,7 +337,7 @@ export function InferencePanel() {
         const msg = err instanceof Error ? err.message : "Unknown error";
         setSpatialHistory((prev) => [
           ...prev,
-          { query: q, response: `⚠️ ${msg}` },
+          { query: q, response: `Error: ${msg}` },
         ]);
       } finally {
         setSpatialLoading(false);
@@ -369,7 +369,7 @@ export function InferencePanel() {
       setChatMessages([
         ...chatMessages,
         { role: "user", content: text },
-        { role: "assistant", content: `⚠️ ${msg}` },
+        { role: "assistant", content: `Error: ${msg}` },
       ]);
     } finally {
       setChatLoading(false);
@@ -489,7 +489,6 @@ export function InferencePanel() {
                     : "border-border hover:bg-accent",
                 ].join(" ")}
               >
-                {mode === "navigation" ? "🚗" : "🏠"}{" "}
                 {t(mode === "navigation" ? "modeNavigation" : "modeLayout")}
               </button>
             ))}
@@ -517,9 +516,6 @@ export function InferencePanel() {
                           : "border-border hover:bg-accent",
                       ].join(" ")}
                     >
-                      {mode === "car" && "🚗"}
-                      {mode === "bike" && "🚲"}
-                      {mode === "walk" && "🚶"}
                       {t(
                         mode === "car"
                           ? "transportCar"
@@ -673,7 +669,7 @@ export function InferencePanel() {
               {chatLoading && chatMessages.length === 0 && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                  <span>Claude analyse la scène…</span>
+                  <span>{t("analyzing")}</span>
                 </div>
               )}
 
