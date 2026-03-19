@@ -21,9 +21,9 @@ export default async function HeroPage({
             variant="secondary"
             className="tsp-label rounded-sm px-2 py-1"
             style={{
-              backgroundColor: "rgba(0,163,181,0.15)",
-              color: "var(--tsp-teal)",
-              border: "1px solid rgba(0,163,181,0.3)",
+              backgroundColor: "rgba(13,63,121,0.8)",
+              color: "#ffffff",
+              border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
             {t("badge1")}
@@ -54,12 +54,34 @@ export default async function HeroPage({
             variant="secondary"
             className="tsp-label rounded-sm px-2 py-1"
             style={{
-              backgroundColor: "rgba(13,63,121,0.8)",
-              color: "#ffffff",
-              border: "1px solid rgba(255,255,255,0.2)",
+              backgroundColor: "rgba(0,163,181,0.15)",
+              color: "var(--tsp-teal)",
+              border: "1px solid rgba(0,163,181,0.3)",
             }}
           >
             {t("badge4")}
+          </Badge>
+          <Badge
+            variant="secondary"
+            className="tsp-label rounded-sm px-2 py-1"
+            style={{
+              backgroundColor: "rgba(0,163,181,0.15)",
+              color: "var(--tsp-teal)",
+              border: "1px solid rgba(0,163,181,0.3)",
+            }}
+          >
+            {t("badge5")}
+          </Badge>
+          <Badge
+            variant="secondary"
+            className="tsp-label rounded-sm px-2 py-1"
+            style={{
+              backgroundColor: "rgba(0,163,181,0.15)",
+              color: "var(--tsp-teal)",
+              border: "1px solid rgba(0,163,181,0.3)",
+            }}
+          >
+            {t("badge6")}
           </Badge>
         </div>
 

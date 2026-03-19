@@ -15,10 +15,12 @@
     "copyright": "© 2025 Télécom SudParis — Institut Polytechnique de Paris"
   },
   "home": {
-    "badge1": "ViT-Small · 25M params",
-    "badge2": "DINOv2 Backbone",
-    "badge3": "Teacher-Student Distillation",
-    "badge4": "Télécom SudParis · MAIA",
+    "badge1": "Télécom SudParis · MAIA",
+    "badge2": "PFE 2025–2026",
+    "badge3": "Computer Vision",
+    "badge4": "Teacher-Student Distillation",
+    "badge5": "DINOv2 Backbone",
+    "badge6": "ViT-Small · 25M params",
     "headline1": "Monocular Depth",
     "headline2": "Estimation",
     "subheadline": "A reproduction of Depth Anything V2 — training a lightweight ViT-Small student model via knowledge distillation from a DINOv2-Giant teacher, deployed at scale on Hugging Face Spaces.",
@@ -48,7 +50,7 @@
   },
   "project": {
     "badge": "PFE 2025–2026 · Télécom SudParis",
-    "title": "Partial Reproduction of Depth Anything V2: Monocular Depth Estimation via Knowledge Distillation",
+    "title": "Monocular Depth Estimation via Knowledge Distillation, a Partial Reproduction of Depth Anything V2",
     "affiliation": "Télécom SudParis — Institut Mines-Télécom · Institut Polytechnique de Paris · 2025–2026",
     "keywords": "monocular depth estimation · knowledge distillation · Vision Transformer · DPT · synthetic-to-real transfer · pseudo-labels",
     "keywordsLabel": "Keywords:",
