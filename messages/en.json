@@ -302,6 +302,10 @@
     "street": "Street",
     "portrait": "Portrait",
     "landscape": "Landscape",
-    "object": "Object"
+    "object": "Object",
+    "street1": "Street 1",
+    "street2": "Street 2",
+    "interieur1": "Interior 1",
+    "interieur2": "Interior 2"
   }
 }

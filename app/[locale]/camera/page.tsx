@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocale } from "next-intl";
 import { resizeImage } from "@/lib/resize-image";
+import { VoiceConversation } from "@/components/camera/VoiceConversation";
 
 type Status = "idle" | "streaming" | "loading" | "done" | "error";
 
@@ -14,6 +16,8 @@ export default function CameraPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  const locale = useLocale();
 
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<Result | null>(null);
@@ -160,12 +164,21 @@ export default function CameraPage() {
             Retake
           </button>
         ) : (
-          <button
-            onClick={capture}
-            disabled={status !== "streaming"}
-            className="h-16 w-16 rounded-full bg-white disabled:opacity-40"
-            aria-label="Capture"
-          />
+          <>
+            <button
+              onClick={capture}
+              disabled={status !== "streaming"}
+              className="h-16 w-16 rounded-full bg-white disabled:opacity-40"
+              aria-label="Capture"
+            />
+            {status === "streaming" && (
+              <VoiceConversation
+                videoRef={videoRef}
+                canvasRef={canvasRef}
+                locale={locale}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

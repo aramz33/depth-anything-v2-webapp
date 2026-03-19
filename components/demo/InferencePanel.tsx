@@ -90,7 +90,13 @@ async function runAnalysis(
   const res = await fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageBase64, depthMapBase64, transport, speedKmh, locale }),
+    body: JSON.stringify({
+      imageBase64,
+      depthMapBase64,
+      transport,
+      speedKmh,
+      locale,
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error ?? "Analysis failed");
@@ -117,11 +123,19 @@ async function sendChatMessage(
   messages: ChatMessage[],
   imageBase64: string,
   safetyResult: SafetyAlert | null,
+  depthMapBase64: string | null,
+  locale: string,
 ): Promise<ChatMessage[]> {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, imageBase64, safetyResult }),
+    body: JSON.stringify({
+      messages,
+      imageBase64,
+      safetyResult,
+      depthMapBase64,
+      locale,
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error ?? "Chat failed");
@@ -218,7 +232,7 @@ export function InferencePanel() {
     if (!result) return;
     setChatMessages([]);
     setChatLoading(true);
-    sendChatMessage([], result.original, null)
+    sendChatMessage([], result.original, null, depthMapBase64, locale)
       .then((msgs) => setChatMessages(msgs))
       .catch(() => {})
       .finally(() => setChatLoading(false));
@@ -323,7 +337,7 @@ export function InferencePanel() {
         const msg = err instanceof Error ? err.message : "Unknown error";
         setSpatialHistory((prev) => [
           ...prev,
-          { query: q, response: `⚠️ ${msg}` },
+          { query: q, response: `Error: ${msg}` },
         ]);
       } finally {
         setSpatialLoading(false);
@@ -346,6 +360,8 @@ export function InferencePanel() {
         nextMessages,
         result.original,
         safetyAlert,
+        depthMapBase64,
+        locale,
       );
       setChatMessages(updated);
     } catch (err) {
@@ -353,7 +369,7 @@ export function InferencePanel() {
       setChatMessages([
         ...chatMessages,
         { role: "user", content: text },
-        { role: "assistant", content: `⚠️ ${msg}` },
+        { role: "assistant", content: `Error: ${msg}` },
       ]);
     } finally {
       setChatLoading(false);
@@ -473,7 +489,6 @@ export function InferencePanel() {
                     : "border-border hover:bg-accent",
                 ].join(" ")}
               >
-                {mode === "navigation" ? "🚗" : "🏠"}{" "}
                 {t(mode === "navigation" ? "modeNavigation" : "modeLayout")}
               </button>
             ))}
@@ -501,9 +516,6 @@ export function InferencePanel() {
                           : "border-border hover:bg-accent",
                       ].join(" ")}
                     >
-                      {mode === "car" && "🚗"}
-                      {mode === "bike" && "🚲"}
-                      {mode === "walk" && "🚶"}
                       {t(
                         mode === "car"
                           ? "transportCar"
@@ -610,7 +622,9 @@ export function InferencePanel() {
                 />
                 <button
                   onClick={() => handleSpatialSubmit()}
-                  disabled={!spatialQuery.trim() || spatialLoading || depthMapLoading}
+                  disabled={
+                    !spatialQuery.trim() || spatialLoading || depthMapLoading
+                  }
                   className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-40"
                 >
                   {spatialLoading && (
@@ -655,7 +669,7 @@ export function InferencePanel() {
               {chatLoading && chatMessages.length === 0 && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                  <span>Claude analyse la scène…</span>
+                  <span>{t("analyzing")}</span>
                 </div>
               )}
 
