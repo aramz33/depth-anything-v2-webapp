@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 
 interface UseVoiceRecorderReturn {
   isRecording: boolean;
-  startRecording: () => Promise<void>;
+  startRecording: () => Promise<boolean>;
   stopRecording: () => Promise<Blob | null>;
 }
 
@@ -15,8 +15,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resolveRef = useRef<((blob: Blob | null) => void) | null>(null);
 
-  const startRecording = useCallback(async () => {
-    if (isRecording) return;
+  const startRecording = useCallback(async (): Promise<boolean> => {
+    if (isRecording) return false;
 
     chunksRef.current = [];
 
@@ -24,7 +24,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
-      return;
+      return false;
     }
 
     const recorder = new MediaRecorder(stream);
@@ -54,6 +54,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
         recorderRef.current.stop();
       }
     }, MAX_RECORDING_MS);
+
+    return true;
   }, [isRecording]);
 
   const stopRecording = useCallback((): Promise<Blob | null> => {

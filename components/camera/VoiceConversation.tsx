@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, Loader2, Volume2 } from "lucide-react";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useTTS } from "@/hooks/useTTS";
+import { useAudioPing } from "@/hooks/useAudioPing";
 import { ShutterFlash } from "./ShutterFlash";
 import { resizeImage } from "@/lib/resize-image";
 import { urlToBase64 } from "@/lib/parse-base64";
@@ -80,6 +81,8 @@ export function VoiceConversation({
 
   const { isRecording, startRecording, stopRecording } = useVoiceRecorder();
   const tts = useTTS(locale);
+  const { pingStart, pingStop } = useAudioPing();
+  const warmUpRef = useRef(false);
 
   // ─── Mount-time camera permission check ─────────────────────────────────────
 
@@ -99,7 +102,7 @@ export function VoiceConversation({
       .catch(() => {
         // permissions API not supported — fail silently, error surfaces on first capture
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── Scene capture ──────────────────────────────────────────────────────────
@@ -180,7 +183,10 @@ export function VoiceConversation({
         const form = new FormData();
         form.append("audio", audioBlob);
         form.append("locale", locale);
-        const res = await fetch("/api/transcribe", { method: "POST", body: form });
+        const res = await fetch("/api/transcribe", {
+          method: "POST",
+          body: form,
+        });
         const data = (await res.json()) as { text?: string; error?: string };
         if (!res.ok || !data.text) throw new Error("transcribe_failed");
         transcript = data.text;
@@ -246,7 +252,11 @@ export function VoiceConversation({
         // Second LLM call — no re-capture allowed
         setStatus("analyzing");
         try {
-          const secondResult = await callVisionChat(updatedMessages, cache, false);
+          const secondResult = await callVisionChat(
+            updatedMessages,
+            cache,
+            false,
+          );
           finalResponse = secondResult.response;
         } catch {
           setStatus("speaking");
@@ -273,6 +283,12 @@ export function VoiceConversation({
   // ─── Mic button handler ─────────────────────────────────────────────────────
 
   const handleMicClick = useCallback(async () => {
+    // Warm up speech synthesis on first user gesture to avoid autoplay policy issues
+    if (!warmUpRef.current) {
+      warmUpRef.current = true;
+      window.speechSynthesis.cancel();
+    }
+
     // Interrupt TTS if speaking
     if (status === "speaking") {
       tts.cancel();
@@ -280,21 +296,32 @@ export function VoiceConversation({
       return;
     }
 
-    if (status !== "idle") return;
-
-    if (!isRecording) {
-      await startRecording();
-      setStatus("recording");
-    } else {
+    // Stop recording and process audio
+    if (status === "recording") {
+      pingStop();
       setStatus("transcribing");
       const blob = await stopRecording();
-      if (blob) {
-        await handleMessage(blob);
-      } else {
-        setStatus("idle");
-      }
+      if (blob) await handleMessage(blob);
+      else setStatus("idle");
+      return;
     }
-  }, [status, isRecording, startRecording, stopRecording, handleMessage, tts]);
+
+    if (status !== "idle") return;
+
+    const started = await startRecording();
+    if (started) {
+      pingStart();
+      setStatus("recording");
+    }
+  }, [
+    status,
+    startRecording,
+    stopRecording,
+    handleMessage,
+    tts,
+    pingStart,
+    pingStop,
+  ]);
 
   // ─── Cache age display ──────────────────────────────────────────────────────
 
@@ -309,7 +336,9 @@ export function VoiceConversation({
     status === "capturing";
 
   const cacheLabel =
-    locale === "en" ? `Seen ${cacheAgeSeconds}s ago` : `Vue il y a ${cacheAgeSeconds}s`;
+    locale === "en"
+      ? `Seen ${cacheAgeSeconds}s ago`
+      : `Vue il y a ${cacheAgeSeconds}s`;
 
   return (
     <>

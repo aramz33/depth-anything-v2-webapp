@@ -42,6 +42,7 @@ export function useTTS(locale: string): UseTTSReturn {
           resolve();
         };
 
+        window.speechSynthesis.resume(); // Chrome bug: synthesis can pause in background
         window.speechSynthesis.speak(utterance);
       });
     },
