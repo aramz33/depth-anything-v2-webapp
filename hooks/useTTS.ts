@@ -32,18 +32,34 @@ export function useTTS(locale: string): UseTTSReturn {
         utterance.lang = overrideLang ?? lang;
         utteranceRef.current = utterance;
 
-        utterance.onstart = () => setIsSpeaking(true);
+        let keepAlive: ReturnType<typeof setInterval> | null = null;
+
+        utterance.onstart = () => {
+          setIsSpeaking(true);
+          // Chrome bug: synthesis silently pauses after ~15s in background
+          keepAlive = setInterval(() => {
+            if (window.speechSynthesis.paused) {
+              window.speechSynthesis.resume();
+            }
+          }, 5000);
+        };
         utterance.onend = () => {
+          if (keepAlive) clearInterval(keepAlive);
           setIsSpeaking(false);
           resolve();
         };
         utterance.onerror = () => {
+          if (keepAlive) clearInterval(keepAlive);
           setIsSpeaking(false);
           resolve();
         };
 
-        window.speechSynthesis.resume(); // Chrome bug: synthesis can pause in background
-        window.speechSynthesis.speak(utterance);
+        // Chrome bug: cancel() followed immediately by speak() in the same
+        // synchronous block silently drops the utterance. A short delay lets
+        // the browser fully process the cancel before queuing the new one.
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance);
+        }, 50);
       });
     },
     [lang],

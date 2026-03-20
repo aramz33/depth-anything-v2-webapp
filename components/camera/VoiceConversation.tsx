@@ -283,10 +283,14 @@ export function VoiceConversation({
   // ─── Mic button handler ─────────────────────────────────────────────────────
 
   const handleMicClick = useCallback(async () => {
-    // Warm up speech synthesis on first user gesture to avoid autoplay policy issues
+    // Warm up speech synthesis on first user gesture.
+    // iOS/WebKit requires speak() to be called within a direct user gesture
+    // to unlock synthesis for subsequent async calls. cancel() alone is not enough.
     if (!warmUpRef.current) {
       warmUpRef.current = true;
-      window.speechSynthesis.cancel();
+      const warmUp = new SpeechSynthesisUtterance(" ");
+      warmUp.volume = 0;
+      window.speechSynthesis.speak(warmUp);
     }
 
     // Interrupt TTS if speaking
