@@ -15,8 +15,8 @@ type VoiceStatus =
   | "idle"
   | "recording"
   | "transcribing"
-  | "analyzing"
   | "capturing"
+  | "analyzing"
   | "speaking";
 
 interface ConversationMessage {
@@ -27,7 +27,6 @@ interface ConversationMessage {
 interface SceneCache {
   imageBase64: string;
   depthMapBase64: string;
-  capturedAt: number;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -74,9 +73,7 @@ export function VoiceConversation({
 }: VoiceConversationProps) {
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const sceneCacheRef = useRef<SceneCache | null>(null);
   const [shutterActive, setShutterActive] = useState(false);
-  const [cacheAge, setCacheAge] = useState<number | null>(null);
   const [micDisabled, setMicDisabled] = useState(false);
 
   const { isRecording, startRecording, stopRecording } = useVoiceRecorder();
@@ -128,49 +125,8 @@ export function VoiceConversation({
     if (!res.ok) throw new Error(data?.error ?? "predict_failed");
 
     const depthMapBase64 = await urlToBase64(data.colorized!);
-    const cache: SceneCache = {
-      imageBase64,
-      depthMapBase64,
-      capturedAt: Date.now(),
-    };
-
-    sceneCacheRef.current = cache;
-    setCacheAge(cache.capturedAt);
-    return cache;
+    return { imageBase64, depthMapBase64 };
   }, [videoRef, canvasRef]);
-
-  // ─── Vision chat call ───────────────────────────────────────────────────────
-
-  const callVisionChat = useCallback(
-    async (
-      msgs: ConversationMessage[],
-      cache: SceneCache,
-      allowCapture: boolean,
-    ) => {
-      const res = await fetch("/api/vision-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: msgs.slice(-MAX_MESSAGES),
-          imageBase64: cache.imageBase64,
-          depthMapBase64: cache.depthMapBase64,
-          locale,
-          allowCapture,
-        }),
-      });
-      const data = (await res.json()) as {
-        response?: string;
-        needsCapture?: boolean;
-        error?: string;
-      };
-      if (!res.ok) throw new Error(data?.error ?? "vision_chat_failed");
-      return {
-        response: data.response ?? "",
-        needsCapture: data.needsCapture ?? false,
-      };
-    },
-    [locale],
-  );
 
   // ─── Main message handler ───────────────────────────────────────────────────
 
@@ -197,19 +153,22 @@ export function VoiceConversation({
         return;
       }
 
-      // 2. Ensure scene cache exists
-      let cache = sceneCacheRef.current;
-      if (!cache) {
-        setStatus("capturing");
-        try {
-          cache = await captureScene();
-        } catch {
-          setStatus("speaking");
-          await tts.speak(t("cameraError", locale));
-          setStatus("idle");
-          return;
-        }
+      // 2. Always capture a fresh scene on every mic press
+      setStatus("capturing");
+      setShutterActive(true);
+      if ("vibrate" in navigator) navigator.vibrate([100]);
+
+      let cache: SceneCache;
+      try {
+        cache = await captureScene();
+      } catch {
+        setShutterActive(false);
+        setStatus("speaking");
+        await tts.speak(t("cameraError", locale));
+        setStatus("idle");
+        return;
       }
+      setTimeout(() => setShutterActive(false), 800);
 
       const updatedMessages: ConversationMessage[] = [
         ...messages,
@@ -217,11 +176,23 @@ export function VoiceConversation({
       ];
       setMessages(updatedMessages);
 
-      // 3. First LLM call
+      // 3. Vision chat
       setStatus("analyzing");
-      let firstResult: { response: string; needsCapture: boolean };
+      let response: string;
       try {
-        firstResult = await callVisionChat(updatedMessages, cache, true);
+        const res = await fetch("/api/vision-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: updatedMessages.slice(-MAX_MESSAGES),
+            imageBase64: cache.imageBase64,
+            depthMapBase64: cache.depthMapBase64,
+            locale,
+          }),
+        });
+        const data = (await res.json()) as { response?: string; error?: string };
+        if (!res.ok) throw new Error(data?.error ?? "vision_chat_failed");
+        response = data.response ?? "";
       } catch {
         setStatus("speaking");
         await tts.speak(t("serviceError", locale));
@@ -229,55 +200,13 @@ export function VoiceConversation({
         return;
       }
 
-      // 4. Re-capture if needed (max once)
-      let finalResponse = firstResult.response;
-
-      if (firstResult.needsCapture) {
-        // Fire TTS + shutter simultaneously
-        setStatus("capturing");
-        setShutterActive(true);
-        if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
-        tts.speak(t("analyzing", locale)); // fire-and-forget
-
-        try {
-          cache = await captureScene();
-        } catch {
-          setShutterActive(false);
-          await tts.speak(t("cameraError", locale));
-          setStatus("idle");
-          return;
-        }
-        setTimeout(() => setShutterActive(false), 1500);
-
-        // Second LLM call — no re-capture allowed
-        setStatus("analyzing");
-        try {
-          const secondResult = await callVisionChat(
-            updatedMessages,
-            cache,
-            false,
-          );
-          finalResponse = secondResult.response;
-        } catch {
-          setStatus("speaking");
-          await tts.speak(t("serviceError", locale));
-          setStatus("idle");
-          return;
-        }
-      }
-
-      // 5. Respond
-      const assistantMessage: ConversationMessage = {
-        role: "assistant",
-        content: finalResponse,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-
+      // 4. Respond
+      setMessages((prev) => [...prev, { role: "assistant", content: response }]);
       setStatus("speaking");
-      await tts.speak(finalResponse);
+      await tts.speak(response);
       setStatus("idle");
     },
-    [messages, locale, captureScene, callVisionChat, tts],
+    [messages, locale, captureScene, tts],
   );
 
   // ─── Mic button handler ─────────────────────────────────────────────────────
@@ -327,11 +256,6 @@ export function VoiceConversation({
     pingStop,
   ]);
 
-  // ─── Cache age display ──────────────────────────────────────────────────────
-
-  const cacheAgeSeconds =
-    cacheAge !== null ? Math.floor((Date.now() - cacheAge) / 1000) : null;
-
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   const isBusy =
@@ -339,22 +263,11 @@ export function VoiceConversation({
     status === "analyzing" ||
     status === "capturing";
 
-  const cacheLabel =
-    locale === "en"
-      ? `Seen ${cacheAgeSeconds}s ago`
-      : `Vue il y a ${cacheAgeSeconds}s`;
-
   return (
     <>
       <ShutterFlash active={shutterActive} />
 
       <div className="flex flex-col items-center gap-2">
-        {/* Cache age indicator */}
-        {cacheAgeSeconds !== null && (
-          <p className="text-xs text-white/50">{cacheLabel}</p>
-        )}
-
-        {/* Mic button */}
         <button
           onClick={handleMicClick}
           disabled={isBusy || micDisabled}

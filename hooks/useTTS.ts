@@ -6,6 +6,25 @@ interface UseTTSReturn {
   cancel: () => void;
 }
 
+// Pick the best available voice for a given BCP-47 language tag.
+// Prefers: exact match → same language prefix → first available.
+// On iOS, voices are loaded synchronously; on Chrome they may not be ready yet.
+function getBestVoice(lang: string): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  const exact = voices.find((v) => v.lang === lang);
+  if (exact) return exact;
+
+  const prefix = lang.split("-")[0];
+  const samePrefix = voices.filter((v) => v.lang.startsWith(prefix));
+  if (!samePrefix.length) return null;
+
+  // Prefer local (on-device) voices — more natural than network-based ones
+  const local = samePrefix.find((v) => v.localService);
+  return local ?? samePrefix[0];
+}
+
 export function useTTS(locale: string): UseTTSReturn {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -30,6 +49,13 @@ export function useTTS(locale: string): UseTTSReturn {
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = overrideLang ?? lang;
+        utterance.rate = 0.92; // Slightly slower for clarity, especially in French
+        utterance.pitch = 1.0;
+
+        // Select best available voice for this language
+        const voice = getBestVoice(utterance.lang);
+        if (voice) utterance.voice = voice;
+
         utteranceRef.current = utterance;
 
         let keepAlive: ReturnType<typeof setInterval> | null = null;

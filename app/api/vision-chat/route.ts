@@ -13,35 +13,33 @@ interface ConversationMessage {
 
 interface VisionChatOutput {
   response: string;
-  needsCapture: boolean;
 }
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   fr:
-    "Tu es un assistant vocal pour personnes malvoyantes. Tu recois deux images : l'image couleur originale puis la carte de profondeur colorisee. " +
+    "Tu es un assistant vocal pour personnes non-voyantes. Tu reçois deux images : l'image originale en couleur, puis la carte de profondeur colorisée. " +
     "Convention de profondeur : couleurs chaudes/claires (jaune, orange, rouge) = PROCHE ; couleurs froides/sombres (violet, bleu, noir) = LOIN. Ne jamais inverser. " +
-    "Decris l'environnement en termes de distances et obstacles avec des phrases courtes et naturelles (ex: 'Porte a 1.5 metres devant vous, sol degagé a droite'). " +
-    "Pas de markdown, pas de listes, phrases courtes optimisees pour la synthese vocale. " +
-    "Reponds UNIQUEMENT en JSON valide : { \"response\": string, \"needsCapture\": boolean }. " +
-    "Mets needsCapture a true SEULEMENT si l'utilisateur indique explicitement un changement de scene (mots-cles : 'maintenant', 'la', 'regarde', 'maintenant t\\'en penses quoi', 'et ca'). " +
-    "Dans tous les autres cas, needsCapture est false.",
+    "Décris l'environnement de manière globale et naturelle, comme si tu guidais quelqu'un les yeux fermés. " +
+    "Structure ta réponse ainsi : commence par une vue d'ensemble (type de lieu, ambiance générale), " +
+    "puis décris les éléments importants par zone (devant, à gauche, à droite) avec leurs distances approximatives. " +
+    "Signale les obstacles, les passages, les ouvertures, les personnes, les objets notables et les points de repère utiles. " +
+    "Utilise des formules directes ('Devant vous', 'À votre gauche', 'À environ deux mètres'). " +
+    "Sois précis sur les distances et les positions. Si c'est un intérieur, décris les murs, portes, fenêtres, meubles. " +
+    "Si c'est un extérieur, décris la route, les trottoirs, les bâtiments, la végétation. " +
+    "Pas de markdown, pas de listes, phrases courtes et naturelles optimisées pour la synthèse vocale. " +
+    "Réponds UNIQUEMENT en JSON valide : { \"response\": string }.",
   en:
-    "You are a vocal assistant for visually impaired users. You receive two images: first the original color image, then the colorized depth map. " +
+    "You are a vocal assistant for blind users. You receive two images: the original color image, then the colorized depth map. " +
     "Depth convention: bright/warm colors (yellow, orange, red) = CLOSE; dark/cool colors (purple, blue, black) = FAR. Do NOT invert this. " +
-    "Describe the environment in terms of distances and obstacles using short natural sentences (e.g. 'Door 1.5 metres ahead, clear floor to your right'). " +
-    "No markdown, no lists, short sentences optimized for text-to-speech. " +
-    "Respond ONLY with valid JSON: { \"response\": string, \"needsCapture\": boolean }. " +
-    "Set needsCapture to true ONLY when the user explicitly implies a scene change (keywords: 'now', 'look', 'what about now', 'and this'). " +
-    "In all other cases, needsCapture is false.",
-};
-
-const SYSTEM_PROMPTS_NO_CAPTURE: Record<string, string> = {
-  fr:
-    SYSTEM_PROMPTS["fr"] +
-    " IMPORTANT : needsCapture doit etre false dans ta reponse. Tu dois repondre avec les images fournies.",
-  en:
-    SYSTEM_PROMPTS["en"] +
-    " IMPORTANT: needsCapture must be false in your response. Answer using the provided images.",
+    "Describe the environment holistically and naturally, as if guiding someone with their eyes closed. " +
+    "Structure your response: start with an overview (type of place, general scene), " +
+    "then describe important elements by zone (ahead, left, right) with approximate distances. " +
+    "Point out obstacles, passageways, openings, people, notable objects, and useful landmarks. " +
+    "Use direct address ('Ahead of you', 'To your left', 'About two metres away'). " +
+    "Be precise about distances and positions. For indoors, describe walls, doors, windows, furniture. " +
+    "For outdoors, describe the road, pavements, buildings, vegetation. " +
+    "No markdown, no lists, short natural sentences optimized for text-to-speech. " +
+    "Respond ONLY with valid JSON: { \"response\": string }.",
 };
 
 export async function POST(req: NextRequest) {
@@ -49,7 +47,6 @@ export async function POST(req: NextRequest) {
   let imageBase64: string;
   let depthMapBase64: string;
   let locale: string;
-  let allowCapture: boolean;
 
   try {
     const body = await req.json();
@@ -57,7 +54,6 @@ export async function POST(req: NextRequest) {
     imageBase64 = body?.imageBase64;
     depthMapBase64 = body?.depthMapBase64;
     locale = body?.locale ?? "fr";
-    allowCapture = body?.allowCapture ?? true;
   } catch {
     return NextResponse.json(
       { error: "Failed to parse request body" },
@@ -78,8 +74,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const systemPromptMap = allowCapture ? SYSTEM_PROMPTS : SYSTEM_PROMPTS_NO_CAPTURE;
-  const systemPrompt = systemPromptMap[locale] ?? systemPromptMap["fr"];
+  const systemPrompt = SYSTEM_PROMPTS[locale] ?? SYSTEM_PROMPTS["fr"];
 
   // Build messages: images only in last user message
   const lastUserIdx = [...messages].map((m) => m.role).lastIndexOf("user");
@@ -112,11 +107,7 @@ export async function POST(req: NextRequest) {
       parsed = {};
     }
 
-    const response = parsed.response ?? "";
-    // Clamp needsCapture to false when allowCapture is false (safety guardrail)
-    const needsCapture = allowCapture ? (parsed.needsCapture ?? false) : false;
-
-    return NextResponse.json({ response, needsCapture });
+    return NextResponse.json({ response: parsed.response ?? "" });
   } catch (err) {
     return NextResponse.json(
       { error: `Groq API error: ${String(err)}` },
