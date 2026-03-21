@@ -10,18 +10,18 @@ export const TEAM: TeamMember[] = [
     name: "Pierlouis Pillet",
     role: "ML Engineer",
     github: "https://github.com/pl-plt",
-    linkedin: "https://linkedin.com/in/TODO-pierlouis",
+    linkedin: "https://www.linkedin.com/in/pierlouis-pillet/",
   },
   {
     name: "Adam Ramsis",
     role: "ML Engineer",
     github: "https://github.com/aramz33",
-    linkedin: "https://linkedin.com/in/TODO-adam",
+    linkedin: "https://www.linkedin.com/in/adam-ramsis-tsp/",
   },
   {
     name: "Rodrick Zegang",
     role: "ML Engineer",
     github: "https://github.com/rodrickAurellZegang",
-    linkedin: "https://linkedin.com/in/TODO-rodrick",
+    linkedin: "https://www.linkedin.com/in/rodrick-aurell-zegang/",
   },
 ];

@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGroqClient, GROQ_MODEL } from "@/lib/groq-client";
 import { toDataUri } from "@/lib/parse-base64";
-
-type ContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
-
-const SYSTEM_PROMPTS: Record<string, string> = {
-  fr:
-    "Tu es un expert en analyse spatiale et amenagement interieur. Tu recois deux images : d'abord l'image couleur originale, puis la carte de disparite colorisee. " +
-    "IMPORTANT convention de profondeur : couleurs chaudes/claires (jaune, orange, rouge) = PROCHE de la camera ; couleurs froides/sombres (violet, noir, bleu) = LOIN. En niveaux de gris : blanc = proche, noir = loin. Ne jamais inverser. " +
-    "Utilise la carte de disparite combinee avec l'image couleur pour raisonner sur les dimensions, les distances et les zones libres. Reponds de facon concise et precise. " +
-    "Si la question n'est pas liee a l'analyse spatiale, au placement d'objets, aux distances ou a la scene visible, reponds brievement que tu ne peux repondre qu'aux questions sur l'espace et le placement.",
-  en:
-    "You are an expert in spatial analysis and interior layout. You receive two images: first the original color image, then the colorized disparity map. " +
-    "IMPORTANT depth convention: bright/warm colors (yellow, orange, red) = CLOSE to camera; dark/cool colors (purple, black, blue) = FAR. In grayscale: white = close, black = far. Do NOT invert this. " +
-    "Use the disparity map combined with the color image to reason about space dimensions, distances between objects, and free areas. Be concise and precise. " +
-    "If the question is not related to spatial analysis, object placement, distances, or the visible scene, briefly explain that you can only answer questions about the space and layout.",
-};
+import { type ContentPart } from "@/lib/types";
+import { SPATIAL_PROMPTS } from "@/lib/prompts";
 
 export async function POST(req: NextRequest) {
   let imageBase64: string;
@@ -48,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "query is required" }, { status: 400 });
   }
 
-  const systemPrompt = SYSTEM_PROMPTS[locale] ?? SYSTEM_PROMPTS["fr"];
+  const systemPrompt = SPATIAL_PROMPTS[locale] ?? SPATIAL_PROMPTS["fr"];
 
   const userContent: ContentPart[] = [
     { type: "image_url", image_url: { url: toDataUri(imageBase64) } },

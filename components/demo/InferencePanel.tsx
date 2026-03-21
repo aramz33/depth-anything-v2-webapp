@@ -5,154 +5,36 @@ import Link from "next/link";
 import { SampleImages } from "./SampleImages";
 import { ImageUpload } from "./ImageUpload";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
+import { NavigationPanel } from "./NavigationPanel";
+import { SceneChat } from "./SceneChat";
+import { SpatialPanel } from "./SpatialPanel";
 import { Badge } from "@/components/ui/badge";
 import { type Sample } from "@/lib/samples";
 import { resizeImage } from "@/lib/resize-image";
+import {
+  type Transport,
+  type InferenceResult,
+  runPrediction,
+  runAnalysis,
+  runSpatialAnalysis,
+  sendChatMessage,
+  urlToBase64,
+} from "@/lib/inference-api";
+import { type ConversationMessage, type SafetyAlert } from "@/lib/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Result {
-  original: string;
-  colorized: string;
-  grayscale: string;
-  inferenceMs: number;
-}
-
-interface SafetyAlert {
-  level: "safe" | "warning" | "danger";
-  alert: string;
-}
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
 
 interface SpatialQA {
   query: string;
   response: string;
 }
 
-type Transport = "car" | "bike" | "walk";
 type ActiveMode = "navigation" | "layout";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SPEED_MAX: Record<Transport, number> = { car: 130, bike: 50, walk: 15 };
 const SPEED_DEFAULT: Record<Transport, number> = { car: 50, bike: 15, walk: 5 };
-
-const ALERT_STYLES: Record<
-  SafetyAlert["level"],
-  { wrapper: string; dot: string }
-> = {
-  danger: {
-    wrapper: "border-red-500/40 bg-red-950/40 text-red-200",
-    dot: "bg-red-500",
-  },
-  warning: {
-    wrapper: "border-orange-500/40 bg-orange-950/40 text-orange-200",
-    dot: "bg-orange-400",
-  },
-  safe: {
-    wrapper: "border-green-500/40 bg-green-950/40 text-green-200",
-    dot: "bg-green-500",
-  },
-};
-
-// ─── API helpers ──────────────────────────────────────────────────────────────
-
-async function runPrediction(
-  imageBase64: string,
-): Promise<Result & { original: string }> {
-  const res = await fetch("/api/predict", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageBase64 }),
-  });
-  let data: Record<string, unknown>;
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error(`Server error ${res.status} (response was not JSON)`);
-  }
-  if (!res.ok)
-    throw new Error(String(data?.detail ?? data?.error ?? "Prediction failed"));
-  return { ...(data as Omit<Result, "original">), original: imageBase64 };
-}
-
-async function runAnalysis(
-  imageBase64: string,
-  depthMapBase64: string | null,
-  transport: Transport,
-  speedKmh: number,
-  locale: string,
-): Promise<SafetyAlert> {
-  const res = await fetch("/api/analyze", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      imageBase64,
-      depthMapBase64,
-      transport,
-      speedKmh,
-      locale,
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error ?? "Analysis failed");
-  return data as SafetyAlert;
-}
-
-async function runSpatialAnalysis(
-  imageBase64: string,
-  depthMapBase64: string | null,
-  query: string,
-  locale: string,
-): Promise<string> {
-  const res = await fetch("/api/spatial", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageBase64, depthMapBase64, query, locale }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error ?? "Spatial analysis failed");
-  return data.response as string;
-}
-
-async function sendChatMessage(
-  messages: ChatMessage[],
-  imageBase64: string,
-  safetyResult: SafetyAlert | null,
-  depthMapBase64: string | null,
-  locale: string,
-): Promise<ChatMessage[]> {
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      messages,
-      imageBase64,
-      safetyResult,
-      depthMapBase64,
-      locale,
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error ?? "Chat failed");
-  return data.messages as ChatMessage[];
-}
-
-/** Fetch an image URL and return it as a base64 data URL. */
-async function urlToBase64(url: string): Promise<string> {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -162,7 +44,7 @@ export function InferencePanel() {
 
   // ── Depth inference ───────────────────────────────────────────────────────
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<InferenceResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -188,13 +70,11 @@ export function InferencePanel() {
   const [spatialQuery, setSpatialQuery] = useState("");
   const [spatialHistory, setSpatialHistory] = useState<SpatialQA[]>([]);
   const [spatialLoading, setSpatialLoading] = useState(false);
-  const spatialBottomRef = useRef<HTMLDivElement>(null);
 
   // ── Chat ──────────────────────────────────────────────────────────────────
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<ConversationMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // ── Depth inference timer ─────────────────────────────────────────────────
   useEffect(() => {
@@ -234,18 +114,9 @@ export function InferencePanel() {
     setChatLoading(true);
     sendChatMessage([], result.original, null, depthMapBase64, locale)
       .then((msgs) => setChatMessages(msgs))
-      .catch(() => {})
+      .catch(() => setChatMessages([]))
       .finally(() => setChatLoading(false));
-  }, [result]);
-
-  // ── Auto-scroll chat and spatial history ──────────────────────────────────
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, chatLoading]);
-
-  useEffect(() => {
-    spatialBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [spatialHistory, spatialLoading]);
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -293,6 +164,12 @@ export function InferencePanel() {
   const handleTransportChange = useCallback((mode: Transport) => {
     setTransport(mode);
     setSpeedKmh(SPEED_DEFAULT[mode]);
+    setSafetyAlert(null);
+    setSafetyError(null);
+  }, []);
+
+  const handleSpeedChange = useCallback((speed: number) => {
+    setSpeedKmh(speed);
     setSafetyAlert(null);
     setSafetyError(null);
   }, []);
@@ -351,7 +228,7 @@ export function InferencePanel() {
     if (!text || !result || chatLoading) return;
     setChatInput("");
     setChatLoading(true);
-    const nextMessages: ChatMessage[] = [
+    const nextMessages: ConversationMessage[] = [
       ...chatMessages,
       { role: "user", content: text },
     ];
@@ -376,18 +253,7 @@ export function InferencePanel() {
     }
   }, [chatInput, chatMessages, result, safetyAlert, chatLoading]);
 
-  const handleChatKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleChatSend();
-      }
-    },
-    [handleChatSend],
-  );
-
   // ── Derived ───────────────────────────────────────────────────────────────
-  const alertStyle = safetyAlert ? ALERT_STYLES[safetyAlert.level] : null;
   const CHIPS = [
     t("spatialChip1"),
     t("spatialChip2"),
@@ -496,241 +362,41 @@ export function InferencePanel() {
 
           {/* ── Navigation Panel ─────────────────────────────────────── */}
           {activeMode === "navigation" && (
-            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-              <p className="text-sm font-semibold">{t("safetyTitle")}</p>
-
-              {/* Transport selector */}
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">
-                  {t("transportLabel")}
-                </p>
-                <div className="flex gap-2">
-                  {(["car", "bike", "walk"] as Transport[]).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => handleTransportChange(mode)}
-                      className={[
-                        "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
-                        transport === mode
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:bg-accent",
-                      ].join(" ")}
-                    >
-                      {t(
-                        mode === "car"
-                          ? "transportCar"
-                          : mode === "bike"
-                            ? "transportBike"
-                            : "transportWalk",
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Speed slider */}
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">
-                  {t("speedLabel", { speed: speedKmh })}
-                </p>
-                <input
-                  type="range"
-                  min={0}
-                  max={SPEED_MAX[transport]}
-                  value={speedKmh}
-                  onChange={(e) => {
-                    setSpeedKmh(Number(e.target.value));
-                    setSafetyAlert(null);
-                    setSafetyError(null);
-                  }}
-                  className="w-full accent-primary"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0</span>
-                  <span>{SPEED_MAX[transport]} km/h</span>
-                </div>
-              </div>
-
-              {/* Analyze button */}
-              <button
-                onClick={handleAnalyze}
-                disabled={analyzing || depthMapLoading}
-                className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
-              >
-                {analyzing && (
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                )}
-                {analyzing ? t("analyzing") : t("analyzeButton")}
-              </button>
-
-              {safetyError && (
-                <p className="text-sm text-destructive">{safetyError}</p>
-              )}
-              {safetyAlert && alertStyle && (
-                <div
-                  className={[
-                    "flex items-start gap-3 rounded-lg border p-3 text-sm",
-                    alertStyle.wrapper,
-                  ].join(" ")}
-                >
-                  <span
-                    className={[
-                      "mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full",
-                      alertStyle.dot,
-                    ].join(" ")}
-                  />
-                  <span>{safetyAlert.alert}</span>
-                </div>
-              )}
-            </div>
+            <NavigationPanel
+              transport={transport}
+              speedKmh={speedKmh}
+              speedMax={SPEED_MAX[transport]}
+              analyzing={analyzing}
+              safetyAlert={safetyAlert}
+              safetyError={safetyError}
+              depthMapLoading={depthMapLoading}
+              onTransportChange={handleTransportChange}
+              onSpeedChange={handleSpeedChange}
+              onAnalyze={handleAnalyze}
+            />
           )}
 
           {/* ── Layout / Spatial Panel ───────────────────────────────── */}
           {activeMode === "layout" && (
-            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-              <p className="text-sm font-semibold">{t("spatialTitle")}</p>
-
-              {/* Suggestion chips */}
-              <div className="flex flex-wrap gap-2">
-                {CHIPS.map((chip) => (
-                  <button
-                    key={chip}
-                    onClick={() => handleSpatialSubmit(chip)}
-                    disabled={spatialLoading}
-                    className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-40"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-
-              {/* Query input + button */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={spatialQuery}
-                  onChange={(e) => setSpatialQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSpatialSubmit();
-                    }
-                  }}
-                  disabled={spatialLoading}
-                  placeholder={t("spatialQueryPlaceholder")}
-                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-primary disabled:opacity-50"
-                />
-                <button
-                  onClick={() => handleSpatialSubmit()}
-                  disabled={
-                    !spatialQuery.trim() || spatialLoading || depthMapLoading
-                  }
-                  className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-40"
-                >
-                  {spatialLoading && (
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                  )}
-                  {spatialLoading ? t("spatialAnalyzing") : t("spatialAnalyze")}
-                </button>
-              </div>
-
-              {/* Scrollable Q&A history */}
-              {spatialHistory.length > 0 && (
-                <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto">
-                  {spatialHistory.map((qa, i) => (
-                    <div key={i} className="space-y-1.5">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Q : {qa.query}
-                      </p>
-                      <div className="rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed">
-                        {qa.response}
-                      </div>
-                    </div>
-                  ))}
-                  {spatialLoading && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                      {t("spatialAnalyzing")}
-                    </div>
-                  )}
-                  <div ref={spatialBottomRef} />
-                </div>
-              )}
-            </div>
+            <SpatialPanel
+              spatialQuery={spatialQuery}
+              spatialHistory={spatialHistory}
+              spatialLoading={spatialLoading}
+              depthMapLoading={depthMapLoading}
+              chips={CHIPS}
+              onQueryChange={setSpatialQuery}
+              onSubmit={handleSpatialSubmit}
+            />
           )}
 
           {/* ── Scene Chat ───────────────────────────────────────────── */}
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <p className="text-sm font-semibold">{t("chatTitle")}</p>
-            </div>
-
-            <div className="flex flex-col gap-3 overflow-y-auto p-4 max-h-[300px]">
-              {chatLoading && chatMessages.length === 0 && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                  <span>{t("analyzing")}</span>
-                </div>
-              )}
-
-              {chatMessages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={[
-                    "flex",
-                    msg.role === "user" ? "justify-end" : "justify-start",
-                  ].join(" ")}
-                >
-                  <div
-                    className={[
-                      "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm"
-                        : "bg-muted text-foreground rounded-bl-sm",
-                    ].join(" ")}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-
-              {chatLoading && chatMessages.length > 0 && (
-                <div className="flex justify-start">
-                  <div className="bg-muted rounded-2xl rounded-bl-sm px-3.5 py-2">
-                    <div className="flex gap-1 items-center h-4">
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div ref={chatBottomRef} />
-            </div>
-
-            <div className="flex gap-2 border-t border-border px-3 py-2.5">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={handleChatKeyDown}
-                disabled={chatLoading}
-                placeholder={t("chatPlaceholder")}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
-              />
-              <button
-                onClick={handleChatSend}
-                disabled={!chatInput.trim() || chatLoading}
-                className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity disabled:opacity-40"
-              >
-                {chatLoading && (
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                )}
-                {chatLoading ? t("chatSending") : t("chatSend")}
-              </button>
-            </div>
-          </div>
+          <SceneChat
+            messages={chatMessages}
+            chatInput={chatInput}
+            chatLoading={chatLoading}
+            onInputChange={setChatInput}
+            onSend={handleChatSend}
+          />
         </div>
       )}
     </div>

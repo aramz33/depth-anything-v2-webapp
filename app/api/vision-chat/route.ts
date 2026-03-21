@@ -1,40 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGroqClient, GROQ_MODEL } from "@/lib/groq-client";
 import { toDataUri } from "@/lib/parse-base64";
-
-type ContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
-
-interface ConversationMessage {
-  role: "user" | "assistant";
-  content: string;
-}
+import { type ContentPart, type ConversationMessage } from "@/lib/types";
+import { VISION_CHAT_PROMPTS } from "@/lib/prompts";
 
 interface VisionChatOutput {
   response: string;
 }
-
-const SYSTEM_PROMPTS: Record<string, string> = {
-  fr:
-    "Tu es un assistant vocal pour personnes non-voyantes. Tu reçois deux images : l'image originale en couleur, puis la carte de profondeur colorisée issue d'un modèle d'estimation de profondeur monoculaire. " +
-    "Convention de profondeur : couleurs chaudes/claires (jaune, orange, rouge) = PROCHE ; couleurs froides/sombres (violet, bleu, noir) = LOIN. Ne jamais inverser. " +
-    "LA DISTANCE EST L'INFORMATION PRINCIPALE. Commence TOUJOURS par les éléments les plus proches avec leur distance estimée en mètres, puis les éléments intermédiaires, puis les lointains. " +
-    "Chaque élément mentionné DOIT être accompagné de sa distance estimée. Exemple : 'À cinquante centimètres devant vous, une chaise. À un mètre cinquante, une table. À trois mètres, la porte.' " +
-    "Après les distances, précise la position (gauche, droite, devant) et si c'est un obstacle ou un passage. " +
-    "Pas de markdown, pas de listes, phrases courtes et naturelles optimisées pour la synthèse vocale. " +
-    'Réponds UNIQUEMENT en JSON valide : { "response": string }.',
-  en:
-    "You are a vocal assistant for blind users. You receive two images: the original color image, then the colorized depth map produced by a monocular depth estimation model. " +
-    "Depth convention: bright/warm colors (yellow, orange, red) = CLOSE; dark/cool colors (purple, blue, black) = FAR. Do NOT invert this. " +
-    "DISTANCE IS THE PRIMARY INFORMATION. ALWAYS start with the closest elements and their estimated distance in metres, then mid-range, then distant ones. " +
-    "Every element mentioned MUST include its estimated distance. Example: 'Fifty centimetres ahead, a chair. One and a half metres, a table. Three metres, the door.' " +
-    "After distances, add position (left, right, ahead) and whether it is an obstacle or passageway. " +
-    "Be precise about distances and positions. For indoors, describe walls, doors, windows, furniture. " +
-    "For outdoors, describe the road, pavements, buildings, vegetation. " +
-    "No markdown, no lists, short natural sentences optimized for text-to-speech. " +
-    'Respond ONLY with valid JSON: { "response": string }.',
-};
 
 export async function POST(req: NextRequest) {
   let messages: ConversationMessage[];
@@ -68,7 +40,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const systemPrompt = SYSTEM_PROMPTS[locale] ?? SYSTEM_PROMPTS["fr"];
+  const systemPrompt = VISION_CHAT_PROMPTS[locale] ?? VISION_CHAT_PROMPTS["fr"];
 
   // Build messages: images only in last user message
   const lastUserIdx = [...messages].map((m) => m.role).lastIndexOf("user");

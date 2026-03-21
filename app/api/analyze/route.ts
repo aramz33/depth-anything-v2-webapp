@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGroqClient, GROQ_MODEL } from "@/lib/groq-client";
 import { toDataUri } from "@/lib/parse-base64";
-
-type ContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
+import { type ContentPart } from "@/lib/types";
 
 const TRANSPORT_LABELS: Record<string, Record<string, string>> = {
   car: { fr: "voiture", en: "car" },
